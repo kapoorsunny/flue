@@ -19,7 +19,7 @@
 			"outputLogs": "errors-only"
 		},
 		"test": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["build", "^build"],
 			"outputLogs": "new-only"
 		},
 		"//#format:lint": {},
