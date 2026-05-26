@@ -307,11 +307,11 @@ into, you can finish that work by wiring the connector into it. Otherwise,
 share this snippet so they can wire it up themselves.
 
 ```ts
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { ModalClient } from 'modal';
 import { modal } from '../connectors/modal'; // adjust path to match the user's layout
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init }: FlueContext) {
   // ModalClient reads MODAL_TOKEN_ID / MODAL_TOKEN_SECRET (or ~/.modal.toml)

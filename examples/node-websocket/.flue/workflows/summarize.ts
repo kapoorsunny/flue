@@ -1,6 +1,6 @@
-import { createAgent, type FlueContext, websocket } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowWebSocketHandler } from '@flue/runtime';
 
-export const channels = [websocket()];
+export const websocket: WorkflowWebSocketHandler = async (_c, next) => next();
 
 const agent = createAgent(() => ({
 	model: 'anthropic/claude-haiku-4-5',

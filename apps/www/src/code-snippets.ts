@@ -1,12 +1,10 @@
 // Prompt copied to the user's clipboard by the "Copy Prompt" CTA in the hero.
 export const COPY_PROMPT = `fetch https://flueframework.com/start.md to create a new agent`;
 
-export const HERO = `import { createAgent, http, type FlueContext } from '@flue/runtime';
+export const HERO = `import { createAgent, type FlueContext } from '@flue/runtime';
 import triage from '../skills/triage/SKILL.md' with { type: 'skill' };
 import { lookupIssue, listRepoLabels } from '../tools/github';
 import * as v from 'valibot';
-
-export const channels = [http()];
 
 // Agents maintain context and safely take action inside an isolated sandbox:
 const agent = createAgent(() => ({

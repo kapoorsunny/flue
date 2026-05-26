@@ -32,9 +32,9 @@
  *   - HTTP 200 with `{ result: { ok: true, ... }, _meta: { runId } }`.
  *   - Two issues in Sentry, both tagged `flue.workflow=explicit`.
  */
-import { http, type FlueContext } from '@flue/runtime';
+import type { FlueContext, WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run(ctx: FlueContext) {
 	// Pretend we tried to call a flaky downstream service and it

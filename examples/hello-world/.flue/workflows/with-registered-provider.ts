@@ -1,6 +1,6 @@
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const agent = createAgent(() => ({ model: 'ollama/llama3.1:8b' }));
 

@@ -1,6 +1,6 @@
-import { Type, createAgent, defineTool, http, type FlueContext } from '@flue/runtime';
+import { Type, createAgent, defineTool, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const agent = createAgent(() => ({ model: 'anthropic/claude-haiku-4-5' }));
 

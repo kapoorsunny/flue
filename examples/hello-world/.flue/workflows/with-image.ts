@@ -1,7 +1,7 @@
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import * as v from 'valibot';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 // A 1×1 fully-yellow PNG. The model should describe a tiny solid-yellow image.
 const TEST_PNG_BASE64 =

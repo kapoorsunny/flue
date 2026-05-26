@@ -1,8 +1,8 @@
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { Daytona } from '@daytona/sdk';
 import { daytona } from '../connectors/daytona';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run({ init }: FlueContext) {
 	// User owns the Daytona SDK relationship — create and configure the sandbox directly

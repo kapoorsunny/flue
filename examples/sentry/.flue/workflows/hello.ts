@@ -15,9 +15,9 @@
  * Expected: HTTP 200 with `{ result: ..., _meta: { runId } }`.
  *          Zero events in Sentry.
  */
-import { http, type FlueContext } from '@flue/runtime';
+import type { FlueContext, WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run(ctx: FlueContext) {
 	ctx.log.info('hello workflow starting', { instanceId: ctx.id });

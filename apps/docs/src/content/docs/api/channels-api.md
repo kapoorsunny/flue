@@ -7,9 +7,19 @@ description: Define transport channels and dispatch asynchronous input to agent 
 
 TODO: Document canonical `@flue/runtime` imports and the focused `@flue/runtime/channels` subpath.
 
-## `http()` and `websocket()`
+## Public exposure middleware
 
-TODO: Reference built-in agent and workflow exposure channels.
+Public HTTP and WebSocket exposure is enabled by exported Hono middleware on agent and workflow modules:
+
+```ts
+// .flue/agents/assistant.ts
+import { type AgentRouteHandler, type AgentWebSocketHandler } from '@flue/runtime';
+
+export const route: AgentRouteHandler = async (_c, next) => next();
+export const websocket: AgentWebSocketHandler = async (_c, next) => next();
+```
+
+For a workflow, use `WorkflowRouteHandler` and `WorkflowWebSocketHandler` instead. Either middleware may authenticate or reject a request before calling `next()`. Authored provider channels defined with `defineChannel(...)` are a separate inbound integration surface.
 
 ## `defineChannel(...)`
 

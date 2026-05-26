@@ -285,11 +285,11 @@ into, you can finish that work by wiring the connector into it. Otherwise,
 share this snippet so they can wire it up themselves.
 
 ```ts
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { Compute } from '@boxd-sh/sdk';
 import { boxd } from '../connectors/boxd'; // adjust path to match the user's layout
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init, env }: FlueContext) {
   const client = new Compute({ apiKey: env.BOXD_API_KEY });

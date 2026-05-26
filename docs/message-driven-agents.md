@@ -53,12 +53,20 @@ Direct delivery:
 
 Direct agent prompts are attached session interactions. They do not allocate or return a `runId`, emit workflow `run_start` / `run_end`, or appear in `/runs` and `flue logs`.
 
-Agent WebSockets are long lived: a single connection may issue sequential prompts, each optionally selecting a named session. Prompt frames are correlated by transport `requestId` and selected instance/session, not by a run identifier. Workflows may also declare `websocket()`, but a workflow socket accepts exactly one invocation and then closes after its terminal result because it represents one finite workflow run.
+Agent WebSockets are long lived: a single connection may issue sequential prompts, each optionally selecting a named session. Prompt frames are correlated by transport `requestId` and selected instance/session, not by a run identifier. Workflows may also export `websocket` middleware, but a workflow socket accepts exactly one invocation and then closes after its terminal result because it represents one finite workflow run.
+
+Direct public exposure is declared with exported Hono middleware. `route` enables HTTP and `websocket` enables WebSocket access; either middleware may authenticate the request before calling `next()`.
 
 ```ts
-import { createAgent, defineAgentProfile, http, websocket } from '@flue/runtime';
+import {
+  createAgent,
+  defineAgentProfile,
+  type AgentRouteHandler,
+  type AgentWebSocketHandler,
+} from '@flue/runtime';
 
-export const channels = [http(), websocket()];
+export const route: AgentRouteHandler = async (_c, next) => next();
+export const websocket: AgentWebSocketHandler = async (_c, next) => next();
 
 const assistant = defineAgentProfile({
   model: 'anthropic/claude-haiku-4-5',
@@ -262,4 +270,4 @@ The case/session model is application logic. For example, a moderation agent may
 - Provider retries may produce duplicate events; preserve provider ids in your input if idempotency matters.
 - WebSocket clients should use the published SDK/protocol surface. Configure SDK `websocketBasePath` for custom-mounted socket routes and `websocketUrl` for URL-carried or signed handshake authentication.
 - HTTP SDK `token` and `headers` options do not automatically authenticate WebSocket upgrades; browser clients should use cookies or application-designed URL authentication.
-- When using a custom `app.ts`, protect every exposed agent/workflow WebSocket route with ordinary application middleware before mounting `flue()`; without a custom app, protect production socket routes upstream. Avoid middleware that mutates WebSocket upgrade response headers.
+- Exported `websocket` middleware can authenticate individual agent/workflow socket routes; use a custom `app.ts` when you need centralized authentication or a mounted prefix. Avoid middleware that mutates WebSocket upgrade response headers.

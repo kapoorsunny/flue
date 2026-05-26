@@ -251,11 +251,11 @@ into, you can finish that work by wiring the connector into it. Otherwise,
 share this snippet so they can wire it up themselves.
 
 ```ts
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { Machine } from 'smolvm-embedded';
 import { smolvm } from '../connectors/smolvm'; // adjust path to match the user's layout
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init }: FlueContext) {
   const machine = await Machine.create({ name: `flue-${Date.now()}` });

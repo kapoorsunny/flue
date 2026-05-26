@@ -1,7 +1,7 @@
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { Bash, InMemoryFs } from 'just-bash';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 /**
  * Smoke test for the public `agent.fs` / `session.fs` surface.

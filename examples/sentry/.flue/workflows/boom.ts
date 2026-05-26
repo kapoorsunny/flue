@@ -24,9 +24,9 @@
  * Flue workflow in this project is instrumented for Sentry by virtue of
  * living in this project, without any per-workflow boilerplate.
  */
-import { http, type FlueContext } from '@flue/runtime';
+import type { FlueContext, WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run(ctx: FlueContext) {
 	// `log.info` is just a normal Flue structured log. It appears in

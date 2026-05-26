@@ -238,9 +238,9 @@ Compaction model calls emit `turn_request` and `turn`, but do not emit ordinary 
 Within a workflow, use `ctx.log` to emit structured diagnostic events alongside its run history:
 
 ```ts title=".flue/workflows/summarize.ts"
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const agent = createAgent(() => ({ model: 'anthropic/claude-haiku-4-5' }));
 

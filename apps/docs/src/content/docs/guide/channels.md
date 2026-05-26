@@ -5,7 +5,7 @@ description: Receive external events and dispatch asynchronous input into persis
 
 ## What is a channel?
 
-TODO: Define authored inbound/provider channels separately from built-in HTTP and WebSocket exposure.
+Authored inbound/provider channels are separate from public agent or workflow exposure. Agent modules expose public access with exported Hono middleware typed as `AgentRouteHandler` or `AgentWebSocketHandler`; workflow modules use `WorkflowRouteHandler` or `WorkflowWebSocketHandler`. A middleware export may add authentication before calling `next()`.
 
 ## Define an inbound channel
 

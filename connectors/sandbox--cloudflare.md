@@ -107,10 +107,10 @@ The short version, for your reference:
    above) is the key on `env`:
 
    ```ts
-   import { createAgent, http, type FlueContext } from '@flue/runtime';
+   import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
    import { getSandbox } from '@cloudflare/sandbox';
 
-   export const channels = [http()];
+   export const route: WorkflowRouteHandler = async (_c, next) => next();
 
    export async function run ({ init, id, env, payload }: FlueContext) {
      const sandbox = getSandbox(env.Sandbox, id);

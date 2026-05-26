@@ -717,10 +717,10 @@ no obvious project convention like `EXE_VM_HOST`, ask for the exe.dev VM
 hostname before wiring the connector.
 
 ```ts
-import { createAgent, http, type FlueContext } from "@flue/runtime";
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from "@flue/runtime";
 import { exedev } from "../connectors/exedev";
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init, env }: FlueContext) {
   const agent = createAgent(() => ({
@@ -741,10 +741,10 @@ API token with `new` permission. The VM is created before `createAgent(...)` and
 then passed to `exedev(...)`.
 
 ```ts
-import { createAgent, http, type FlueContext } from "@flue/runtime";
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from "@flue/runtime";
 import { createExeVm, deleteExeVm, exedev } from "../connectors/exedev";
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init, env }: FlueContext) {
   const vm = await createExeVm({ apiToken: env.EXE_API_TOKEN });
@@ -771,10 +771,10 @@ an API token with `cp` permission. If you delete the clone afterwards, the
 token also needs `rm` permission.
 
 ```ts
-import { createAgent, http, type FlueContext } from "@flue/runtime";
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from "@flue/runtime";
 import { cloneExeVm, deleteExeVm, exedev } from "../connectors/exedev";
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run ({ init, env }: FlueContext) {
   const vm = await cloneExeVm({

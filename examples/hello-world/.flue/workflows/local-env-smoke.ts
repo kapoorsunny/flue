@@ -1,7 +1,7 @@
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 /**
  * Smoke test for the `local()` sandbox factory on Node.

@@ -36,10 +36,10 @@ npm install -D @flue/cli
 `.flue/workflows/translate.ts`:
 
 ```typescript
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import * as v from 'valibot';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const translator = createAgent(() => ({ model: 'openai/gpt-5.5' }));
 
@@ -63,7 +63,7 @@ export async function run({ init, payload }: FlueContext) {
 
 A few things to note:
 
-- **`channels = [http()]`** — This workflow is invoked via HTTP. Flue creates a route for it automatically.
+- **`route`** — Export Hono middleware to expose this workflow via HTTP. It may perform authentication before calling `next()`.
 - **`createAgent(...)` + `init(agent)`** — Created agents declare model and sandbox configuration; workflows initialize them when needed. `init(agent)` fails unless its created agent config provides a model, sets `model: false`, or supplies a profile with a model. By default, Flue gives initialized agents a virtual sandbox powered by [just-bash](https://github.com/vercel-labs/just-bash). No container needed.
 - **Schemas** — The [Valibot](https://valibot.dev) schema defines the expected output shape. Flue parses the agent's response and returns it on `response.data`, fully typed.
 
@@ -97,7 +97,7 @@ curl http://localhost:3583/workflows/translate \
   -d '{"text": "Hello world", "language": "French"}'
 ```
 
-Every workflow with `channels = [http()]` gets an HTTP endpoint automatically. The route follows the pattern `/workflows/<name>` — for example, `.flue/workflows/translate.ts` becomes `/workflows/translate`.
+Every workflow that exports `route` gets an HTTP endpoint automatically. The middleware may authenticate the request and call `next()` to admit it. The route follows the pattern `/workflows/<name>` — for example, `.flue/workflows/translate.ts` becomes `/workflows/translate`.
 
 For a one-shot production-style run (no watcher), use `flue build` + the generated server. The built server reads `process.env` directly, so source your env file in your shell or pass values explicitly:
 
@@ -111,7 +111,7 @@ node dist/server.mjs
 
 ### WebSocket endpoints
 
-Declare `websocket()` to expose an agent or workflow through the generated server's WebSocket upgrade handling. Agents use `GET /agents/:name/:id` and remain connected for sequential prompts; workflows use `GET /workflows/:name`, accept one invocation, return a result, and close.
+Export WebSocket middleware to expose an agent or workflow through the generated server's WebSocket upgrade handling. For a workflow, import `type WorkflowWebSocketHandler` and export `const websocket: WorkflowWebSocketHandler = async (_c, next) => next();`; use `AgentWebSocketHandler` in an agent module. The middleware may authenticate the upgrade before calling `next()`. Agents use `GET /agents/:name/:id` and remain connected for sequential prompts; workflows use `GET /workflows/:name`, accept one invocation, return a result, and close.
 
 ```ts
 import { createFlueClient } from '@flue/sdk';
@@ -127,7 +127,7 @@ await job.ready;
 console.log(await job.invoke({ text: 'Hello', language: 'French' }));
 ```
 
-Custom `.flue/app.ts` applications can protect and mount WebSocket routes with ordinary Hono middleware. For example, apply `app.use('/api/agents/*', authenticate)` and `app.use('/api/workflows/*', authenticate)` before `app.route('/api', flue())` to cover both socket surfaces. SDK clients can connect through that mount with `websocketBasePath: '/api'` and can attach query-token or signed handshake context with `websocketUrl: (url) => { url.searchParams.set('token', socketToken); return url; }`. HTTP `token` and `headers` options do not automatically apply to WebSocket upgrades; browsers should use cookies or application-designed URL authentication, while Node clients requiring implementation-specific headers can supply a custom `websocket` factory. Without a custom app, generated socket routes have no application authentication hook and must be protected by an authenticated upstream gateway or proxy in production. Avoid header-mutating middleware such as CORS wrapping WebSocket upgrade routes, because WebSocket upgrade responses may have immutable headers.
+An exported `websocket` middleware can authenticate its own agent or workflow socket endpoint. Custom `.flue/app.ts` applications provide centralized authentication and mounted prefixes: for example, apply `app.use('/api/agents/*', authenticate)` and `app.use('/api/workflows/*', authenticate)` before `app.route('/api', flue())` to cover both socket surfaces. SDK clients can connect through that mount with `websocketBasePath: '/api'` and can attach query-token or signed handshake context with `websocketUrl: (url) => { url.searchParams.set('token', socketToken); return url; }`. HTTP `token` and `headers` options do not automatically apply to WebSocket upgrades; browsers should use cookies or application-designed URL authentication, while Node clients requiring implementation-specific headers can supply a custom `websocket` factory. Avoid header-mutating middleware such as CORS wrapping WebSocket upgrade routes, because WebSocket upgrade responses may have immutable headers.
 
 You can also invoke any workflow from the CLI without starting a server. `flue run` accepts the same `--env` flag:
 
@@ -196,11 +196,11 @@ Env exposure is opt-in. By default only shell essentials (`PATH`, `HOME`, locale
 `.flue/workflows/reviewer.ts`:
 
 ```typescript
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { local } from '@flue/runtime/node';
 import * as v from 'valibot';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const reviewer = createAgent(() => ({ sandbox: local(), model: 'anthropic/claude-sonnet-4-6' }));
 

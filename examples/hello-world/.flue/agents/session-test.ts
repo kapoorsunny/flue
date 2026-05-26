@@ -1,6 +1,6 @@
-import { createAgent, defineAgentProfile, http } from '@flue/runtime';
+import { createAgent, defineAgentProfile, type AgentRouteHandler } from '@flue/runtime';
 
-export const channels = [http()];
+export const route: AgentRouteHandler = async (_c, next) => next();
 
 const sessionTest = defineAgentProfile({
 	instructions: 'You are a test agent for session-oriented message delivery.',

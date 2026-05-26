@@ -1,7 +1,7 @@
-import { createAgent, defineAgentProfile, http, type FlueContext } from '@flue/runtime';
+import { createAgent, defineAgentProfile, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import * as v from 'valibot';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 const greeter = defineAgentProfile({
 	name: 'greeter',

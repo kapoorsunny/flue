@@ -9,14 +9,14 @@ This replaces the old `getVirtualSandbox(env.BUCKET)` API. That API described R2
 ## Basic Pattern
 
 ```ts
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import {
   getDefaultWorkspace,
   getShellSandbox,
   hydrateFromBucket,
 } from '@flue/runtime/cloudflare';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 export async function run({ init, env, payload }: FlueContext) {
   const workspace = getDefaultWorkspace();

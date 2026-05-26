@@ -25,7 +25,7 @@
  * See the example's README.md for the full setup, the seed-r2.sh helper,
  * and the migration / fallback options if you don't have Loader access.
  */
-import { createAgent, http, type FlueContext } from '@flue/runtime';
+import { createAgent, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import {
 	getDefaultWorkspace,
 	getShellSandbox,
@@ -33,7 +33,7 @@ import {
 } from '@flue/runtime/cloudflare';
 import * as v from 'valibot';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 interface Env {
 	KNOWLEDGE_BASE: R2Bucket;

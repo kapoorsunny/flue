@@ -1,7 +1,7 @@
-import { Type, createAgent, defineTool, http, type FlueContext } from '@flue/runtime';
+import { Type, createAgent, defineTool, type FlueContext, type WorkflowRouteHandler } from '@flue/runtime';
 import { Bash, InMemoryFs } from 'just-bash';
 
-export const channels = [http()];
+export const route: WorkflowRouteHandler = async (_c, next) => next();
 
 /**
  * Custom tools + delegated agent tool test.
