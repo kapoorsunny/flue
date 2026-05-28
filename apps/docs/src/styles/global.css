@@ -196,14 +196,35 @@
 .docs-content pre.astro-code {
 	overflow-x: auto;
 	border: 1px solid #37383e;
-	border-radius: 0.55rem;
+	border-radius: 0.3rem;
 	background: #161616;
 	box-shadow: 0 1px 1px rgb(0 0 0 / 0.08);
 	font-family: var(--font-mono);
-	font-size: 0.82rem;
+	font-size: 0.77rem;
 	line-height: 1.7;
 	margin: 1.2rem 0 1.55rem;
 	padding: 1.05rem 1.2rem;
+	scrollbar-color: #4b4c51 #161616;
+	scrollbar-width: thin;
+}
+
+.docs-content pre.astro-code::-webkit-scrollbar {
+	height: 0.55rem;
+}
+
+.docs-content pre.astro-code::-webkit-scrollbar-track {
+	border-radius: 999px;
+	background: #161616;
+}
+
+.docs-content pre.astro-code::-webkit-scrollbar-thumb {
+	border: 2px solid #161616;
+	border-radius: 999px;
+	background: #4b4c51;
+}
+
+.docs-content pre.astro-code::-webkit-scrollbar-thumb:hover {
+	background: #62636a;
 }
 
 .docs-content pre code {
