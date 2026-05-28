@@ -153,17 +153,17 @@
 
 .docs-content ul > li::before {
 	position: absolute;
-	top: 0.63em;
-	left: -1.25rem;
-	width: 0.42rem;
-	height: 0.42rem;
-	border-radius: 999px;
-	background: var(--docs-accent-deep);
+	top: 0.7em;
+	left: -1.2rem;
+	width: 0.34rem;
+	height: 0.34rem;
+	border-radius: 0.04rem;
+	background: #a8a9b0;
 	content: '';
 }
 
 .docs-content ul ul > li::before {
-	border: 1.5px solid var(--docs-accent-deep);
+	border: 1px solid #a8a9b0;
 	background: transparent;
 }
 
@@ -224,30 +224,6 @@
 }
 
 .docs-content pre.astro-code::-webkit-scrollbar-thumb:hover {
-	background: #62636a;
-}
-
-.docs-content [data-copy-prompt-text] {
-	scrollbar-color: #4b4c51 #161616;
-	scrollbar-width: thin;
-}
-
-.docs-content [data-copy-prompt-text]::-webkit-scrollbar {
-	height: 0.55rem;
-}
-
-.docs-content [data-copy-prompt-text]::-webkit-scrollbar-track {
-	border-radius: 999px;
-	background: #161616;
-}
-
-.docs-content [data-copy-prompt-text]::-webkit-scrollbar-thumb {
-	border: 2px solid #161616;
-	border-radius: 999px;
-	background: #4b4c51;
-}
-
-.docs-content [data-copy-prompt-text]::-webkit-scrollbar-thumb:hover {
 	background: #62636a;
 }
 
