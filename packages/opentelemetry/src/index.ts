@@ -30,6 +30,7 @@ export function createOpenTelemetryObserver(
 	const tools = new Map<string, Span>();
 	const tasks = new Map<string, Span>();
 	const compactions = new Map<string, Span>();
+	const spanRunIds = new WeakMap<Span, string>();
 
 	return (event, ctx) => {
 		const time = timestamp(event);
@@ -58,6 +59,17 @@ export function createOpenTelemetryObserver(
 			return;
 		}
 		if (event.type === 'run_resume') {
+			endRunDescendants(
+				event.runId,
+				time,
+				'Workflow execution was interrupted before this span received its terminal event.',
+				spanRunIds,
+				operations,
+				turns,
+				tools,
+				tasks,
+				compactions,
+			);
 			const interrupted = runs.get(event.runId);
 			if (interrupted) {
 				interrupted.setStatus({
@@ -79,6 +91,7 @@ export function createOpenTelemetryObserver(
 					{
 						kind: SpanKind.INTERNAL,
 						startTime: time,
+						...(interrupted ? { links: [{ context: interrupted.spanContext() }] } : {}),
 						attributes: {
 							...identifiers(event),
 							'flue.workflow.name': event.workflowName,
@@ -94,17 +107,21 @@ export function createOpenTelemetryObserver(
 			const parent = event.taskId ? tasks.get(event.taskId) : workflowSpan(event, runs);
 			operations.set(
 				event.operationId,
-				startSpan(
-					tracer,
-					`flue.operation ${event.operationKind}`,
-					parent,
+				trackRunSpan(
+					startSpan(
+						tracer,
+						`flue.operation ${event.operationKind}`,
+						parent,
+						event,
+						ctx,
+						resolveRootContext,
+						{
+							startTime: time,
+							attributes: { ...identifiers(event), 'flue.operation.kind': event.operationKind },
+						},
+					),
 					event,
-					ctx,
-					resolveRootContext,
-					{
-						startTime: time,
-						attributes: { ...identifiers(event), 'flue.operation.kind': event.operationKind },
-					},
+					spanRunIds,
 				),
 			);
 			return;
@@ -114,22 +131,26 @@ export function createOpenTelemetryObserver(
 			const parent = operationSpan(event, operations) ?? workflowSpan(event, runs);
 			tasks.set(
 				event.taskId,
-				startSpan(
-					tracer,
-					event.agent ? `flue.task ${event.agent}` : 'flue.task',
-					parent,
-					event,
-					ctx,
-					resolveRootContext,
-					{
-						startTime: time,
-						attributes: {
-							...identifiers(event),
-							...(event.agent ? { 'flue.task.agent': event.agent } : {}),
-							...(exportedEvent?.cwd ? { 'flue.task.cwd': exportedEvent.cwd } : {}),
-							...contentAttribute('flue.task.prompt', exportedEvent?.prompt),
+				trackRunSpan(
+					startSpan(
+						tracer,
+						event.agent ? `flue.task ${event.agent}` : 'flue.task',
+						parent,
+						event,
+						ctx,
+						resolveRootContext,
+						{
+							startTime: time,
+							attributes: {
+								...identifiers(event),
+								...(event.agent ? { 'flue.task.agent': event.agent } : {}),
+								...(exportedEvent?.cwd ? { 'flue.task.cwd': exportedEvent.cwd } : {}),
+								...contentAttribute('flue.task.prompt', exportedEvent?.prompt),
+							},
 						},
-					},
+					),
+					event,
+					spanRunIds,
 				),
 			);
 			return;
@@ -138,14 +159,18 @@ export function createOpenTelemetryObserver(
 			const parent = operationSpan(event, operations) ?? workflowSpan(event, runs);
 			compactions.set(
 				compactionKey(event),
-				startSpan(tracer, 'flue.compaction', parent, event, ctx, resolveRootContext, {
-					startTime: time,
-					attributes: {
-						...identifiers(event),
-						'flue.compaction.reason': event.reason,
-						'flue.compaction.estimated_tokens': event.estimatedTokens,
-					},
-				}),
+				trackRunSpan(
+					startSpan(tracer, 'flue.compaction', parent, event, ctx, resolveRootContext, {
+						startTime: time,
+						attributes: {
+							...identifiers(event),
+							'flue.compaction.reason': event.reason,
+							'flue.compaction.estimated_tokens': event.estimatedTokens,
+						},
+					}),
+					event,
+					spanRunIds,
+				),
 			);
 			return;
 		}
@@ -159,19 +184,23 @@ export function createOpenTelemetryObserver(
 						workflowSpan(event, runs));
 			turns.set(
 				event.turnId,
-				startSpan(tracer, 'gen_ai.generate', parent, event, ctx, resolveRootContext, {
-					startTime: time,
-					attributes: {
-						...identifiers(event),
-						'flue.turn.purpose': event.purpose,
-						'gen_ai.operation.name': 'chat',
-						'gen_ai.provider.name': event.provider,
-						'gen_ai.request.model': event.model,
-						'flue.provider.api': event.api,
-						...(event.reasoning ? { 'flue.reasoning': event.reasoning } : {}),
-						...contentAttribute('flue.turn.input', exportedEvent?.input),
-					},
-				}),
+				trackRunSpan(
+					startSpan(tracer, 'gen_ai.generate', parent, event, ctx, resolveRootContext, {
+						startTime: time,
+						attributes: {
+							...identifiers(event),
+							'flue.turn.purpose': event.purpose,
+							'gen_ai.operation.name': 'chat',
+							'gen_ai.provider.name': event.provider,
+							'gen_ai.request.model': event.model,
+							'flue.provider.api': event.api,
+							...(event.reasoning ? { 'flue.reasoning': event.reasoning } : {}),
+							...contentAttribute('flue.turn.input', exportedEvent?.input),
+						},
+					}),
+					event,
+					spanRunIds,
+				),
 			);
 			return;
 		}
@@ -183,15 +212,19 @@ export function createOpenTelemetryObserver(
 				workflowSpan(event, runs);
 			tools.set(
 				toolKey(event),
-				startSpan(tracer, `flue.tool ${event.toolName}`, parent, event, ctx, resolveRootContext, {
-					startTime: time,
-					attributes: {
-						...identifiers(event),
-						'flue.tool.name': event.toolName,
-						'flue.tool.call_id': event.toolCallId,
-						...contentAttribute('flue.tool.arguments', exportedEvent?.args),
-					},
-				}),
+				trackRunSpan(
+					startSpan(tracer, `flue.tool ${event.toolName}`, parent, event, ctx, resolveRootContext, {
+						startTime: time,
+						attributes: {
+							...identifiers(event),
+							'flue.tool.name': event.toolName,
+							'flue.tool.call_id': event.toolCallId,
+							...contentAttribute('flue.tool.arguments', exportedEvent?.args),
+						},
+					}),
+					event,
+					spanRunIds,
+				),
 			);
 			return;
 		}
@@ -298,8 +331,22 @@ export function createOpenTelemetryObserver(
 			return;
 		}
 		if (event.type === 'run_end') {
+			endRunDescendants(
+				event.runId,
+				time,
+				'Workflow run ended before this span received its terminal event.',
+				spanRunIds,
+				operations,
+				turns,
+				tools,
+				tasks,
+				compactions,
+			);
 			const span = runs.get(event.runId);
-			if (!span) return;
+			if (!span) {
+				recoveryHandledRuns.delete(event.runId);
+				return;
+			}
 			const exportedEvent = sanitizeEvent(sanitize, event);
 			span.setAttributes({
 				[recoveryHandledRuns.has(event.runId)
@@ -313,6 +360,35 @@ export function createOpenTelemetryObserver(
 			recoveryHandledRuns.delete(event.runId);
 		}
 	};
+}
+
+function trackRunSpan(span: Span, event: FlueEvent, spanRunIds: WeakMap<Span, string>): Span {
+	if (event.runId) spanRunIds.set(span, event.runId);
+	return span;
+}
+
+function endRunDescendants(
+	runId: string,
+	time: Date,
+	message: string,
+	spanRunIds: WeakMap<Span, string>,
+	operations: Map<string, Span>,
+	turns: Map<string, Span>,
+	tools: Map<string, Span>,
+	tasks: Map<string, Span>,
+	compactions: Map<string, Span>,
+): void {
+	for (const spans of [tools, turns, compactions, tasks, operations]) {
+		for (const [key, span] of spans) {
+			if (spanRunIds.get(span) !== runId) continue;
+			span.setStatus({
+				code: SpanStatusCode.ERROR,
+				message,
+			});
+			span.end(time);
+			spans.delete(key);
+		}
+	}
 }
 
 function startSpan(

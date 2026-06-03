@@ -51,6 +51,8 @@ The resolver runs only when a Flue span has no tracked Flue parent. Return `unde
 | `compaction_start` / `compaction`      | Compaction span                                                                                           |
 | `log`                                  | Span event                                                                                                |
 
+A recovered workflow handling segment represents terminal processing after interruption, not resumed workflow code. If the interrupted workflow span still exists in the same isolate, the recovery segment links to it and closes any still-open descendants as interrupted. After an isolate reset, correlate segments through `flue.run_id` and event indexes when available; Flue does not persist trace context automatically.
+
 ## Identity and accounting
 
 Spans include `flue.event.start_index` and `flue.event.end_index` when the corresponding Flue lifecycle events carry indexes. Log span events include `flue.event.index`. For successfully persisted workflow events, combine an index with `flue.run_id` to correlate trace activity with workflow history and SSE resume positions. The adapter receives live events, so the presence of an index does not prove persistence succeeded. For direct and dispatched agent activity, indexes are live per-context ordering values only; `flue.dispatch_id` remains the delivery identity for dispatched work.

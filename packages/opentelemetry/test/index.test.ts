@@ -19,6 +19,7 @@ class RecordingSpan implements Span {
 	readonly attributes: Record<string, AttributeValue> = {};
 	readonly events: Array<{ name: string; attributes?: Record<string, AttributeValue> }> = [];
 	readonly exceptions: unknown[] = [];
+	readonly links: Link[] = [];
 	status?: SpanStatus;
 	ended = false;
 
@@ -28,6 +29,7 @@ class RecordingSpan implements Span {
 		readonly parent: Span | undefined,
 	) {
 		Object.assign(this.attributes, options?.attributes);
+		this.links.push(...(options?.links ?? []));
 	}
 
 	spanContext(): SpanContext {
@@ -60,10 +62,12 @@ class RecordingSpan implements Span {
 		return this;
 	}
 
-	addLink(_link: Link) {
+	addLink(link: Link) {
+		this.links.push(link);
 		return this;
 	}
-	addLinks(_links: Link[]) {
+	addLinks(links: Link[]) {
+		this.links.push(...links);
 		return this;
 	}
 
@@ -533,8 +537,156 @@ describe('createOpenTelemetryObserver', () => {
 		});
 		expect(tracer.spans[1]?.parent).toBe(parent);
 		expect(tracer.spans[1]?.options?.root).toBe(false);
+		expect(tracer.spans[1]?.links).toEqual([{ context: tracer.spans[0]?.spanContext() }]);
 		expect(tracer.spans[1]?.attributes).not.toHaveProperty('flue.workflow.resumed');
 		expect(tracer.spans.every((span) => span.ended)).toBe(true);
+	});
+
+	it('ends tracked descendant spans when recovery handling continues after interruption', () => {
+		const tracer = new RecordingTracer();
+		const observe = createOpenTelemetryObserver({ tracer: tracer as never });
+		observe(
+			{
+				type: 'run_start',
+				runId: 'run-1',
+				owner: { kind: 'workflow', workflowName: 'report', instanceId: 'run-1' },
+				instanceId: 'run-1',
+				workflowName: 'report',
+				startedAt: '2026-05-27T00:00:00.000Z',
+				payload: {},
+				timestamp: '2026-05-27T00:00:00.000Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'operation_start',
+				runId: 'run-1',
+				operationId: 'op-1',
+				operationKind: 'prompt',
+				timestamp: '2026-05-27T00:00:00.010Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'turn_request',
+				runId: 'run-1',
+				operationId: 'op-1',
+				turnId: 'turn-1',
+				purpose: 'agent',
+				model: 'sonnet',
+				provider: 'anthropic',
+				api: 'messages',
+				input: { messages: [] },
+				timestamp: '2026-05-27T00:00:00.020Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'tool_start',
+				runId: 'run-1',
+				operationId: 'op-1',
+				turnId: 'turn-1',
+				toolCallId: 'tool-1',
+				toolName: 'lookup',
+				args: {},
+				timestamp: '2026-05-27T00:00:00.030Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'run_resume',
+				runId: 'run-1',
+				owner: { kind: 'workflow', workflowName: 'report', instanceId: 'run-1' },
+				instanceId: 'run-1',
+				workflowName: 'report',
+				startedAt: '2026-05-27T00:00:00.000Z',
+				timestamp: '2026-05-27T00:01:00.000Z',
+			},
+			{} as never,
+		);
+
+		expect(tracer.spans.map((span) => span.name)).toEqual([
+			'flue.workflow report',
+			'flue.operation prompt',
+			'gen_ai.generate',
+			'flue.tool lookup',
+			'flue.workflow report',
+		]);
+		expect(tracer.spans.slice(0, 4).every((span) => span.ended)).toBe(true);
+		expect(tracer.spans.slice(1, 4).every((span) => span.status?.code === SpanStatusCode.ERROR)).toBe(
+			true,
+		);
+		expect(tracer.spans[4]?.ended).toBe(false);
+	});
+
+	it('starts recovery handling without a predecessor link when no workflow start was observed', () => {
+		const tracer = new RecordingTracer();
+		const observe = createOpenTelemetryObserver({ tracer: tracer as never });
+		observe(
+			{
+				type: 'run_resume',
+				runId: 'run-1',
+				owner: { kind: 'workflow', workflowName: 'report', instanceId: 'run-1' },
+				instanceId: 'run-1',
+				workflowName: 'report',
+				startedAt: '2026-05-27T00:00:00.000Z',
+				timestamp: '2026-05-27T00:01:00.000Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'run_end',
+				runId: 'run-1',
+				durationMs: 60_020,
+				isError: true,
+				timestamp: '2026-05-27T00:01:00.020Z',
+			},
+			{} as never,
+		);
+
+		expect(tracer.spans).toHaveLength(1);
+		expect(tracer.spans[0]?.links).toEqual([]);
+		expect(tracer.spans[0]?.attributes).toMatchObject({
+			'flue.workflow.recovery_handling': true,
+		});
+		expect(tracer.spans[0]?.ended).toBe(true);
+	});
+
+	it('ends tracked descendant spans when a workflow terminal event arrives without a tracked root', () => {
+		const tracer = new RecordingTracer();
+		const observe = createOpenTelemetryObserver({ tracer: tracer as never });
+		observe(
+			{
+				type: 'operation_start',
+				runId: 'run-1',
+				operationId: 'op-1',
+				operationKind: 'prompt',
+				timestamp: '2026-05-27T00:00:00.010Z',
+			},
+			{} as never,
+		);
+		observe(
+			{
+				type: 'run_end',
+				runId: 'run-1',
+				durationMs: 10,
+				isError: true,
+				timestamp: '2026-05-27T00:00:00.020Z',
+			},
+			{} as never,
+		);
+
+		expect(tracer.spans).toHaveLength(1);
+		expect(tracer.spans[0]?.ended).toBe(true);
+		expect(tracer.spans[0]?.status).toMatchObject({
+			code: SpanStatusCode.ERROR,
+			message: 'Workflow run ended before this span received its terminal event.',
+		});
 	});
 
 	it('does not export failed task result content unless sanitization is enabled', () => {
