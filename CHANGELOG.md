@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.10.1 - 2026-06-08
+
+### Fixes & Other Changes
+
+- Fixed generated Node and Cloudflare app entrypoints by avoiding collisions with application-owned `app` bindings.
+- Updated `@earendil-works/pi-ai` and `@earendil-works/pi-agent-core` to 0.79.0.
+- Fixed typos in documentation: "truely", "exited", and "suitible" (#211).
+- Fixed docs search dialog throwing `InvalidStateError` when `Cmd/Ctrl+K` is pressed while already open (#214).
+- Fixed SSE parser missing frame boundaries when CRLF is split across stream chunks or when using CR-only line endings (#216).
+- Added `deleted_classes` and `renamed_classes` migration examples to the Cloudflare target documentation (#203).
+
 ## 0.10.0 - 2026-06-08
 
 This is a large pre-1.0 release that establishes Flue's durability model across Node.js and Cloudflare. Rather than cataloging every intermediate beta change, this entry highlights the final APIs and the most important upgrade work. For guides and API reference, see the [documentation](https://flueframework.com/docs/).
