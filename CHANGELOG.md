@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixes & Other Changes
+
+- SQL-backed sessions now store each history entry in its own row instead of rewriting the entire session history as one JSON value. Session saves remain transactional and preserve ordered history across Cloudflare Durable Object SQLite, Node SQLite, and PostgreSQL.
+
 ## 0.11.0 - 2026-06-09
 
 ### New Features

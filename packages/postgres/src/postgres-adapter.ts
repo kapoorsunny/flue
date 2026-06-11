@@ -216,9 +216,23 @@ async function ensureTables(runner: PgRunner): Promise<void> {
 		await tx.query(`
 			CREATE TABLE IF NOT EXISTS flue_sessions (
 				id TEXT PRIMARY KEY,
-				data TEXT NOT NULL,
-				updated_at BIGINT NOT NULL
+				data TEXT NOT NULL
 			)
+		`);
+
+		await tx.query(`
+			CREATE TABLE IF NOT EXISTS flue_session_entries (
+				session_id TEXT NOT NULL,
+				entry_id TEXT NOT NULL,
+				position INTEGER NOT NULL,
+				data TEXT NOT NULL,
+				PRIMARY KEY (session_id, entry_id)
+			)
+		`);
+
+		await tx.query(`
+			CREATE INDEX IF NOT EXISTS flue_session_entries_session_position_idx
+			ON flue_session_entries (session_id, position ASC)
 		`);
 
 		await tx.query(`
@@ -362,23 +376,80 @@ class PgSessionStore implements SessionStore {
 	constructor(private runner: PgRunner) {}
 
 	async save(id: string, data: SessionData): Promise<void> {
-		await this.runner.query(
-			`INSERT INTO flue_sessions (id, data, updated_at) VALUES ($1, $2, $3)
-			 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = EXCLUDED.updated_at`,
-			[id, JSON.stringify(data), Date.now()],
-		);
+		const { entries: sessionEntries, ...session } = data;
+		const entries = sessionEntries.map((entry, position) => ({
+			entry,
+			position,
+			data: JSON.stringify(entry),
+		}));
+		await this.runner.transaction(async (tx) => {
+			await tx.query(
+				`INSERT INTO flue_sessions (id, data) VALUES ($1, $2)
+				 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+				[id, JSON.stringify(session)],
+			);
+			const existingRows = await tx.query(
+				'SELECT entry_id, position, data FROM flue_session_entries WHERE session_id = $1',
+				[id],
+			);
+			const existing = new Map(existingRows.map((row) => [row.entry_id, row]));
+			const retained = new Set<string>();
+			for (const { entry, position, data: entryData } of entries) {
+				retained.add(entry.id);
+				const current = existing.get(entry.id);
+				if (Number(current?.position) === position && current?.data === entryData) continue;
+				await tx.query(
+					`INSERT INTO flue_session_entries (session_id, entry_id, position, data)
+					 VALUES ($1, $2, $3, $4)
+					 ON CONFLICT (session_id, entry_id) DO UPDATE SET
+					 position = EXCLUDED.position, data = EXCLUDED.data`,
+					[id, entry.id, position, entryData],
+				);
+			}
+			for (const row of existingRows) {
+				if (typeof row.entry_id === 'string' && !retained.has(row.entry_id)) {
+					await tx.query(
+						'DELETE FROM flue_session_entries WHERE session_id = $1 AND entry_id = $2',
+						[id, row.entry_id],
+					);
+				}
+			}
+		});
 	}
 
 	async load(id: string): Promise<SessionData | null> {
-		const rows = await this.runner.query('SELECT data FROM flue_sessions WHERE id = $1 LIMIT 1', [id]);
-		const row = rows[0];
-		if (!row) return null;
-		if (typeof row.data !== 'string') throw new Error('[flue] Persisted session row is malformed.');
-		return JSON.parse(row.data) as SessionData;
+		return this.runner.transaction(async (tx) => {
+			const rows = await tx.query(
+				'SELECT data FROM flue_sessions WHERE id = $1 LIMIT 1 FOR SHARE',
+				[id],
+			);
+			const row = rows[0];
+			if (!row) return null;
+			if (typeof row.data !== 'string') {
+				throw new Error('[flue] Persisted session row is malformed.');
+			}
+			const session = JSON.parse(row.data) as Omit<SessionData, 'entries'>;
+			const entryRows = await tx.query(
+				'SELECT data FROM flue_session_entries WHERE session_id = $1 ORDER BY position ASC',
+				[id],
+			);
+			return {
+				...session,
+				entries: entryRows.map((entryRow) => {
+					if (typeof entryRow.data !== 'string') {
+						throw new Error('[flue] Persisted session entry row is malformed.');
+					}
+					return JSON.parse(entryRow.data);
+				}),
+			};
+		});
 	}
 
 	async delete(id: string): Promise<void> {
-		await this.runner.query('DELETE FROM flue_sessions WHERE id = $1', [id]);
+		await this.runner.transaction(async (tx) => {
+			await tx.query('DELETE FROM flue_session_entries WHERE session_id = $1', [id]);
+			await tx.query('DELETE FROM flue_sessions WHERE id = $1', [id]);
+		});
 	}
 }
 
