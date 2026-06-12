@@ -89,7 +89,7 @@ Workflows are finite function invocations. Each invocation runs your authored `r
 
 Flue workflows are not resumable. If a workflow is interrupted, Flue does not checkpoint arbitrary TypeScript execution and continue the function from the last completed line or step. Your application decides whether starting the workflow again is appropriate.
 
-Interrupted-run cleanup differs by target. On Cloudflare, recovery terminalizes an interrupted run as errored — emitting `run_resume` then `run_end` — and closes its event stream so readers see the end of the stream. Node.js currently has no equivalent recovery path: runs do not survive a process restart, a run orphaned by a crash is never terminalized, and its event stream is never closed. Live readers of that run's stream (long-poll, SSE, or `flue logs -f`) wait indefinitely; use a catch-up read to inspect the events persisted before the crash.
+Interrupted-run cleanup differs by target. On Cloudflare, recovery terminalizes an interrupted run as errored — emitting `run_resume` then `run_end` — and closes its event stream so readers see the end of the stream. Node.js currently has no equivalent recovery path: a run orphaned by a crash is never terminalized and its event stream is never closed. With a file-backed adapter the run record and its events survive the restart, but the orphaned run remains listed as `active`. Live readers of that run's stream (long-poll, SSE, or `flue logs -f`) wait indefinitely; use a catch-up read to inspect the events persisted before the crash.
 
 ### Retry workflows explicitly
 

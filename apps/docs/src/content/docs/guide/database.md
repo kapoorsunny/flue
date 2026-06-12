@@ -24,7 +24,7 @@ Flue discovers `db.ts` at build time and wires the exported `PersistenceAdapter`
 - workflow-run records and events;
 - workflow-run indexing for `/runs` and administrative listing.
 
-Without `db.ts`, the Node target uses in-memory SQLite for agent sessions and submissions, plus in-memory workflow-run storage. That gives one running process ordered state handling, but all of that state disappears when the process exits.
+Without `db.ts`, the Node target keeps all of this state — sessions, submissions, run records, and run indexing — in in-memory SQLite. That gives one running process ordered state handling, but all of that state disappears when the process exits.
 
 Cloudflare does not use `db.ts`. Generated agent and workflow Durable Objects use SQLite automatically.
 
