@@ -15,6 +15,8 @@ In a Flue project, an agent is a file in `src/agents/` whose default export is c
 ```ts title="src/agents/joke-teller.ts"
 import { createAgent, type AgentRouteHandler } from '@flue/runtime';
 
+export const description = 'Tells a short joke in response to each message.';
+
 export const route: AgentRouteHandler = async (_c, next) => next();
 
 export default createAgent(() => ({
@@ -26,6 +28,7 @@ export default createAgent(() => ({
 In this example:
 
 - **The filename:** This gives the agent its name: `joke-teller`.
+- `description`: This optional static description is collected into the deployment manifest at build time and returned by [`listAgents()`](/docs/api/data-persistence-api/#inspection-primitives). When present, it must be a non-empty string.
 - `route`: This exposes the agent over HTTP at `POST /agents/joke-teller/:id`. Event streaming is available at `GET /agents/joke-teller/:id`.
 - `createAgent(...)`: This defines the agent's behavior and environment.
 
