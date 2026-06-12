@@ -67,20 +67,19 @@ Throws when validation fails or when no `target` is supplied.
 
 ### `ResolveConfigOptions`
 
-| Option       | Type                           | Description                                                                                                 |
-| ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `cwd`        | `string`                       | Caller working directory and default config-search base.                                                    |
-| `searchFrom` | `string \| undefined`          | Optional config-search base. Defaults to `cwd`. Relative values resolve from the process working directory. |
-| `configFile` | `string \| false \| undefined` | Explicit config-file path relative to `cwd`, or `false` to skip loading.                                    |
-| `inline`     | `UserFlueConfig \| undefined`  | Validated inline overrides. Relative paths resolve from `cwd`.                                              |
+| Option       | Type                          | Description                                                                                                  |
+| ------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `cwd`        | `string`                      | Caller working directory and default config-search base.                                                     |
+| `searchFrom` | `string \| undefined`         | Optional config-search base. Defaults to `cwd`. Relative values resolve from the process working directory.  |
+| `configFile` | `string \| undefined`         | Explicit config-file path relative to `cwd`.                                                                 |
+| `inline`     | `UserFlueConfig \| undefined` | Validated inline overrides. Relative paths resolve from `cwd`.                                               |
 
 ### `ResolvedConfigResult`
 
-| Property     | Type                  | Description                                                 |
-| ------------ | --------------------- | ----------------------------------------------------------- |
-| `configPath` | `string \| undefined` | Absolute path of the loaded config file.                    |
-| `userConfig` | `UserFlueConfig`      | Merged but unresolved configuration-file and inline values. |
-| `flueConfig` | `FlueConfig`          | Fully resolved configuration consumed by the CLI.           |
+| Property     | Type                  | Description                                       |
+| ------------ | --------------------- | ------------------------------------------------- |
+| `configPath` | `string \| undefined` | Absolute path of the loaded config file.          |
+| `flueConfig` | `FlueConfig`          | Fully resolved configuration consumed by the CLI. |
 
 ## `resolveConfigPath()`
 
@@ -88,13 +87,13 @@ Throws when validation fails or when no `target` is supplied.
 function resolveConfigPath(opts: ResolveConfigPathOptions): string | undefined;
 ```
 
-Returns the absolute path of the selected `flue.config.*` file. Relative `cwd` values resolve from the process working directory; relative explicit `configFile` values resolve from normalized `cwd`. Returns `undefined` when no configuration file is found or when `configFile` is `false`.
+Returns the absolute path of the selected `flue.config.*` file. Relative `cwd` values resolve from the process working directory; relative explicit `configFile` values resolve from normalized `cwd`. Returns `undefined` when no configuration file is found.
 
 Throws when an explicit `configFile` path does not exist.
 
 ### `ResolveConfigPathOptions`
 
-| Option       | Type                           | Description                                                                        |
-| ------------ | ------------------------------ | ---------------------------------------------------------------------------------- |
-| `cwd`        | `string`                       | Working directory for config discovery and relative `configFile` paths.            |
-| `configFile` | `string \| false \| undefined` | Explicit config-file path relative to `cwd`, or `false` to disable config loading. |
+| Option       | Type                  | Description                                                              |
+| ------------ | --------------------- | ------------------------------------------------------------------------ |
+| `cwd`        | `string`              | Working directory for config discovery and relative `configFile` paths.  |
+| `configFile` | `string \| undefined` | Explicit config-file path relative to `cwd`.                             |
