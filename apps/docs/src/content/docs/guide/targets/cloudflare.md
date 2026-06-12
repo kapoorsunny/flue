@@ -124,17 +124,18 @@ To customize the gateway, disable it, or target a named gateway, re-register the
 
 ## Cloudflare Sandbox
 
-[Cloudflare Sandbox](https://developers.cloudflare.com/containers/) provides container-backed Linux environments for agents that need tools such as git, package installation, native binaries, or a real filesystem. Export the sandbox Durable Object class from `cloudflare.ts`, declare its binding and container image in `wrangler.jsonc`, then pass the RPC stub returned by `getSandbox(...)` to `createAgent(...)`:
+[Cloudflare Sandbox](https://developers.cloudflare.com/containers/) provides container-backed Linux environments for agents that need tools such as git, package installation, native binaries, or a real filesystem. Export the sandbox Durable Object class from `cloudflare.ts`, declare its binding and container image in `wrangler.jsonc`, then wrap the RPC stub returned by `getSandbox(...)` with `cloudflareSandbox(...)`:
 
 ```ts
 import { getSandbox } from '@cloudflare/sandbox';
 import { createAgent } from '@flue/runtime';
+import { cloudflareSandbox } from '@flue/runtime/cloudflare';
 
 type Env = { Sandbox: DurableObjectNamespace };
 
 export default createAgent<unknown, Env>(({ id, env }) => ({
   model: 'anthropic/claude-sonnet-4-6',
-  sandbox: getSandbox(env.Sandbox, id),
+  sandbox: cloudflareSandbox(getSandbox(env.Sandbox, id)),
   cwd: '/workspace',
 }));
 ```

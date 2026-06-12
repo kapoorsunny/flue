@@ -358,12 +358,13 @@ The base image is published by Cloudflare and bundles the control-plane HTTP ser
 
 ```typescript
 import { createAgent, type AgentRouteHandler } from '@flue/runtime';
+import { cloudflareSandbox } from '@flue/runtime/cloudflare';
 import { getSandbox } from '@cloudflare/sandbox';
 
 export const route: AgentRouteHandler = async (_c, next) => next();
 
 export default createAgent(({ id, env }) => ({
-  sandbox: getSandbox(env.Sandbox, id),
+  sandbox: cloudflareSandbox(getSandbox(env.Sandbox, id)),
   model: 'anthropic/claude-opus-4-7',
 }));
 ```
@@ -397,7 +398,7 @@ export { Sandbox as NodeSandbox } from '@cloudflare/sandbox';
 }
 ```
 
-Each agent grabs the sandbox it needs: `getSandbox(env.PyBox, id)` or `getSandbox(env.NodeBox, id)`.
+Each agent grabs the sandbox it needs: `cloudflareSandbox(getSandbox(env.PyBox, id))` or `cloudflareSandbox(getSandbox(env.NodeBox, id))`.
 
 ### Secure egress with outbound Workers
 

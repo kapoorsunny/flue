@@ -14,17 +14,18 @@ Cloudflare Sandbox requires a Worker deployment, Durable Object/container config
 export { Sandbox } from '@cloudflare/sandbox';
 ```
 
-Declare the sandbox binding in Wrangler configuration, then pass the RPC stub returned by `getSandbox(...)` to an agent:
+Declare the sandbox binding in Wrangler configuration, then wrap the RPC stub returned by `getSandbox(...)` with `cloudflareSandbox(...)` and pass it to an agent:
 
 ```ts
 import { getSandbox } from '@cloudflare/sandbox';
 import { createAgent } from '@flue/runtime';
+import { cloudflareSandbox } from '@flue/runtime/cloudflare';
 
 type Env = { Sandbox: DurableObjectNamespace };
 
 export default createAgent<unknown, Env>(({ id, env }) => ({
   model: 'anthropic/claude-sonnet-4-6',
-  sandbox: getSandbox(env.Sandbox, id),
+  sandbox: cloudflareSandbox(getSandbox(env.Sandbox, id)),
   cwd: '/workspace',
 }));
 ```
