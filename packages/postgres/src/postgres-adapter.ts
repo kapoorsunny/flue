@@ -23,11 +23,8 @@ import type {
 	ListRunsOpts,
 	ListRunsResponse,
 	PersistenceAdapter,
-	RecordRunEndInput,
-	RecordRunStartInput,
 	RunRecord,
 	RunPointer,
-	RunRegistry,
 	RunStatus,
 	RunStore,
 	SessionData,
@@ -125,9 +122,6 @@ export function postgres(urlOrOptions?: string | PostgresOptions): PersistenceAd
 		connectRunStore() {
 			return new PgRunStore(getRunner());
 		},
-		connectRunRegistry() {
-			return new PgRunRegistry(getRunner());
-		},
 		connectEventStreamStore() {
 			return new PgEventStreamStore(getRunner());
 		},
@@ -158,9 +152,6 @@ export function postgresFromRunner(runner: PgRunner): PersistenceAdapter {
 		},
 		connectRunStore() {
 			return new PgRunStore(runner);
-		},
-		connectRunRegistry() {
-			return new PgRunRegistry(runner);
 		},
 		connectEventStreamStore() {
 			return new PgEventStreamStore(runner);
@@ -349,20 +340,8 @@ async function ensureTables(runner: PgRunner): Promise<void> {
 		`);
 
 		await tx.query(`
-			CREATE TABLE IF NOT EXISTS flue_run_registry (
-				run_id TEXT PRIMARY KEY,
-				workflow_name TEXT NOT NULL,
-				status TEXT NOT NULL,
-				started_at TEXT NOT NULL,
-				ended_at TEXT,
-				duration_ms INTEGER,
-				is_error BOOLEAN
-			)
-		`);
-
-		await tx.query(`
-			CREATE INDEX IF NOT EXISTS flue_run_registry_status_started_idx
-			ON flue_run_registry (status, started_at DESC, run_id DESC)
+			CREATE INDEX IF NOT EXISTS flue_runs_status_started_idx
+			ON flue_runs (status, started_at DESC, run_id DESC)
 		`);
 
 		await tx.query(`
@@ -1110,9 +1089,12 @@ class PgRunStore implements RunStore {
 	constructor(private runner: PgRunner) {}
 
 	async createRun(input: CreateRunInput): Promise<void> {
+		// Idempotent first-writer-wins: a replayed runId must neither raise a
+		// unique violation nor resurrect a terminal record back to 'active'.
 		await this.runner.query(
 			`INSERT INTO flue_runs (run_id, workflow_name, status, started_at, payload)
-			 VALUES ($1, $2, 'active', $3, $4)`,
+			 VALUES ($1, $2, 'active', $3, $4)
+			 ON CONFLICT (run_id) DO NOTHING`,
 			[
 				input.runId,
 				input.workflowName,
@@ -1161,51 +1143,12 @@ class PgRunStore implements RunStore {
 			...(row.error != null ? { error: JSON.parse(String(row.error)) } : {}),
 		};
 	}
-}
-
-// ─── Run registry ───────────────────────────────────────────────────────────
-
-class PgRunRegistry implements RunRegistry {
-	constructor(private runner: PgRunner) {}
-
-	async recordRunStart(input: RecordRunStartInput): Promise<void> {
-		await this.runner.query(
-			`INSERT INTO flue_run_registry (run_id, workflow_name, status, started_at)
-			 VALUES ($1, $2, 'active', $3)
-			 ON CONFLICT (run_id) DO NOTHING`,
-			[input.runId, input.workflowName, input.startedAt],
-		);
-	}
-
-	async recordRunEnd(input: RecordRunEndInput): Promise<void> {
-		// Upsert so a terminal write heals a start pointer lost to a transient
-		// fault; on conflict the original started_at is preserved.
-		await this.runner.query(
-			`INSERT INTO flue_run_registry
-			 (run_id, workflow_name, status, started_at, ended_at, duration_ms, is_error)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7)
-			 ON CONFLICT (run_id) DO UPDATE SET
-			   status = EXCLUDED.status,
-			   ended_at = EXCLUDED.ended_at,
-			   duration_ms = EXCLUDED.duration_ms,
-			   is_error = EXCLUDED.is_error`,
-			[
-				input.runId,
-				input.workflowName,
-				input.isError ? 'errored' : 'completed',
-				input.startedAt,
-				input.endedAt,
-				input.durationMs,
-				input.isError,
-			],
-		);
-	}
 
 	async lookupRun(runId: string): Promise<RunPointer | null> {
 		const rows = await this.runner.query(
 			`SELECT run_id, workflow_name, status, started_at,
 			        ended_at, duration_ms, is_error
-			 FROM flue_run_registry WHERE run_id = $1 LIMIT 1`,
+			 FROM flue_runs WHERE run_id = $1 LIMIT 1`,
 			[runId],
 		);
 		const row = rows[0];
@@ -1242,7 +1185,7 @@ class PgRunRegistry implements RunRegistry {
 		const rows = await this.runner.query(
 			`SELECT run_id, workflow_name, status, started_at,
 			        ended_at, duration_ms, is_error
-			 FROM flue_run_registry
+			 FROM flue_runs
 			 ${where}
 			 ORDER BY started_at DESC, run_id DESC
 			 LIMIT $${paramIdx}`,
