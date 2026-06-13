@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+### Breaking Changes
+
+- **Persistence adapters now use one async `connect()` contract.** Custom adapters return `executionStore`, `runStore`, and `eventStreamStore` together; `RunRegistry` is removed in favor of `RunStore`, and adapters must stamp and check schema versions.
+- **Workflow run APIs are simplified.** Run IDs are now opaque `run_<ulid>` values, invocation responses use one flat `{ streamUrl, offset, runId? }` envelope, and `GET /runs/:runId?meta` replaces the removed admin run API. `admin()`, `client.admin.*`, `adminBasePath`, and related docs are removed.
+- **Tool and timeout APIs changed.** `defineTool({ parameters })` now uses valibot instead of TypeBox, the root `Type` export is removed, duration fields are `timeoutMs`, and durability `retry` becomes `maxAttempts`.
+- **Cloudflare and sandbox cleanup.** `cloudflareSandbox()` replaces the workerd stub heuristic; `getVirtualSandbox`, `sandbox: false`, and expired sandbox migration shims are removed.
+- **Session and event contracts are tightened.** Public session operations expose `FlueSession`, subagent profiles are self-contained, session errors are typed, and durable events now carry `v: 1` without persisting `turn_request` or raw `assistantMessageEvent` payloads.
+- **Cloudflare extension imports moved.** Generated-entry plumbing now lives under `@flue/runtime/cloudflare/internal`; user-facing Cloudflare imports remain authoring-only.
+
+### New Features
+
+- Built-in `sqlite()` now persists workflow runs and indexes, matching PostgreSQL and Cloudflare durability; all built-in SQL stores now schema-version stamp.
+- `@flue/runtime` exports `listRuns()`, `getRun()`, and `listAgents()`; SDK `runs.get()` uses public `?meta`; workflow `wait=result` and typed direct-agent prompt responses are supported.
+- `CallHandle` now implements the full Promise interface, and SDK stream coordinates are taken from server responses rather than fabricated.
+- `FlueFs.writeFile()` now guarantees parent directory creation in every sandbox mode; `ShellOptions.timeoutMs` is available for shell operations.
+- `observe()` subscribers can skip selected event types, and OpenTelemetry spans and attributes now align with GenAI semconv.
+
+### Fixes & Other Changes
+
+- Recovery now resumes shutdown-interrupted turns, settles completed work before budget or timeout checks, repairs partial tool batches without replaying completed tools, and emits durable submission-settlement events for waiters.
+- Cloudflare attempt markers are now Flue-owned rather than querying private Agents SDK tables.
+- `flue logs` treats `--since` as an opaque Durable Streams offset, supports `--format ndjson`, and uses public run metadata.
+- Many bug fixes landed across Node and Cloudflare execution, SDK stream iteration, CLI shutdown and reload, Workers AI streaming, sandbox filesystem behavior, skill parsing, docs, and test coverage.
+
 ## 0.11.1 - 2026-06-11
 
 ### New Features
