@@ -153,6 +153,95 @@ describe('createGoogleChatChannel()', () => {
 		expect(fetcher).toHaveBeenCalledOnce();
 	});
 
+	it('coalesces concurrent unknown OIDC keys and cools down failed cold discovery', async () => {
+		const unknownToken = await signOidcToken(ENDPOINT_AUDIENCE, CHAT_IDENTITY, {
+			kid: 'unknown-key',
+		});
+		const unknownFetcher = keyFetcher();
+		const unknownChannel = createGoogleChatChannel({
+			fetch: unknownFetcher,
+			interactions: {
+				authentication: { type: 'endpoint-url', audience: ENDPOINT_AUDIENCE, jwksUrl: JWKS_URL },
+				handler: vi.fn(),
+			},
+		});
+		const unknownRequest = () =>
+			app(unknownChannel).request(
+				'/interactions',
+				requestWithToken({ type: 'MESSAGE' }, unknownToken),
+			);
+
+		const unknownResponses = await Promise.all([unknownRequest(), unknownRequest(), unknownRequest()]);
+
+		expect(unknownResponses.map((response) => response.status)).toEqual([401, 401, 401]);
+		expect(unknownFetcher).toHaveBeenCalledOnce();
+
+		const failedFetcher = vi.fn(async () => new Response(null, { status: 503 }));
+		const failedChannel = createGoogleChatChannel({
+			fetch: failedFetcher,
+			interactions: {
+				authentication: { type: 'endpoint-url', audience: ENDPOINT_AUDIENCE, jwksUrl: JWKS_URL },
+				handler: vi.fn(),
+			},
+		});
+		const failedRequest = () =>
+			app(failedChannel).request(
+				'/interactions',
+				requestWithToken({ type: 'MESSAGE' }, unknownToken),
+			);
+
+		expect((await failedRequest()).status).toBe(401);
+		expect((await failedRequest()).status).toBe(401);
+		expect(failedFetcher).toHaveBeenCalledOnce();
+	});
+
+	it('coalesces concurrent unknown X509 keys and cools down failed cold discovery', async () => {
+		const token = await new SignJWT({})
+			.setProtectedHeader({ alg: 'RS256', kid: 'unknown-key' })
+			.setIssuer(CHAT_IDENTITY)
+			.setAudience(PROJECT_NUMBER)
+			.setIssuedAt()
+			.setExpirationTime('5m')
+			.sign(x509PrivateKey);
+		const createChannel = (fetcher: typeof globalThis.fetch) =>
+			createGoogleChatChannel({
+				fetch: fetcher,
+				interactions: {
+					authentication: {
+						type: 'project-number',
+						projectNumber: PROJECT_NUMBER,
+						certificatesUrl: CERTIFICATES_URL,
+					},
+					handler: vi.fn(),
+				},
+			});
+		const unknownFetcher = vi.fn(async () =>
+			Response.json({ 'synthetic-x509-key': SYNTHETIC_CERTIFICATE }),
+		);
+		const unknownChannel = createChannel(unknownFetcher);
+		const request = (channel: GoogleChatChannel) =>
+			app(channel).request(
+				'/interactions',
+				requestWithToken({ type: 'MESSAGE' }, token),
+			);
+
+		const responses = await Promise.all([
+			request(unknownChannel),
+			request(unknownChannel),
+			request(unknownChannel),
+		]);
+
+		expect(responses.map((response) => response.status)).toEqual([401, 401, 401]);
+		expect(unknownFetcher).toHaveBeenCalledOnce();
+
+		const failedFetcher = vi.fn(async () => new Response(null, { status: 503 }));
+		const failedChannel = createChannel(failedFetcher);
+
+		expect((await request(failedChannel)).status).toBe(401);
+		expect((await request(failedChannel)).status).toBe(401);
+		expect(failedFetcher).toHaveBeenCalledOnce();
+	});
+
 	it('rejects endpoint tokens with another identity or signing key', async () => {
 		const interactions = vi.fn(() => undefined);
 		const channel = endpointChannel(interactions);
@@ -317,17 +406,26 @@ describe('createGoogleChatChannel()', () => {
 		expect(workspaceEvents.mock.calls[0]?.[0].delivery).toEqual(delivery);
 	});
 
-	it('passes a future Workspace event type through when its CloudEvent is valid', async () => {
+	it('passes documented Chat and Cloud Identity Workspace event subjects', async () => {
 		const workspaceEvents = vi.fn((_input: { delivery: unknown }) => undefined);
 		const channel = workspaceChannel(workspaceEvents);
-		const delivery = pubsubDelivery({
-			eventType: 'google.workspace.chat.future.v2.changed',
-			subject: '//chat.googleapis.com/spaces/future-space',
-			data: { futureResource: { preserved: true } },
-		});
+		const deliveries = [
+			pubsubDelivery({
+				eventType: 'google.workspace.chat.future.v2.changed',
+				subject: '//chat.googleapis.com/spaces/-',
+				data: { futureResource: { preserved: true } },
+			}),
+			pubsubDelivery({
+				eventType: 'google.workspace.identity.user.v1.updated',
+				subject: '//cloudidentity.googleapis.com/users/123456789',
+				data: { user: { name: 'users/123456789' } },
+			}),
+		];
 
-		expect((await app(channel).request('/events', await eventInit(delivery))).status).toBe(200);
-		expect(workspaceEvents.mock.calls[0]?.[0].delivery).toEqual(delivery);
+		for (const delivery of deliveries) {
+			expect((await app(channel).request('/events', await eventInit(delivery))).status).toBe(200);
+		}
+		expect(workspaceEvents.mock.calls.map(([input]) => input.delivery)).toEqual(deliveries);
 	});
 
 	it('returns authentication failure when unauthenticated Pub/Sub data is invalid', async () => {
@@ -519,10 +617,10 @@ function requestWithToken(body: unknown, token: string): RequestInit {
 async function signOidcToken(
 	audience: string,
 	email: string,
-	overrides: { issuer?: string; expirationTime?: number } = {},
+	overrides: { issuer?: string; expirationTime?: number; kid?: string } = {},
 ): Promise<string> {
 	return new SignJWT({ email, email_verified: true })
-		.setProtectedHeader({ alg: 'RS256', kid: 'synthetic-google-key' })
+		.setProtectedHeader({ alg: 'RS256', kid: overrides.kid ?? 'synthetic-google-key' })
 		.setIssuer(overrides.issuer ?? 'https://accounts.google.com')
 		.setAudience(audience)
 		.setIssuedAt()

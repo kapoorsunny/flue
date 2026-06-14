@@ -184,7 +184,10 @@ function isWorkspaceEventDelivery(value: Record<string, unknown>): boolean {
 	}
 	if (eventType.startsWith('google.workspace.events.subscription.v1.')) {
 		if (subject !== source) return false;
-	} else if (!/^\/\/chat\.googleapis\.com\/spaces\/[^/]+$/.test(subject)) {
+	} else if (
+		!/^\/\/chat\.googleapis\.com\/spaces\/[^/]+$/.test(subject) &&
+		!/^\/\/cloudidentity\.googleapis\.com\/users\/[^/]+$/.test(subject)
+	) {
 		return false;
 	}
 	return decodeBase64Json(message.data) !== undefined;

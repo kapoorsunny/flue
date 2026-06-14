@@ -54,6 +54,33 @@ interface CachedKeys {
 	keys: Map<string, CryptoKey>;
 }
 
+function createSigningKeyCache(refresh: () => Promise<CachedKeys>) {
+	let cache: CachedKeys | undefined;
+	let pending: Promise<CachedKeys> | undefined;
+	let lastRefreshAt = Number.NEGATIVE_INFINITY;
+
+	return async (kid: string): Promise<CryptoKey | undefined> => {
+		const now = Date.now();
+		const freshCache = cache && cache.expiresAt > now ? cache : undefined;
+		const key = freshCache?.keys.get(kid);
+		if (key) return key;
+		if (pending) return (await pending).keys.get(kid);
+		if (now - lastRefreshAt < UNKNOWN_KEY_REFRESH_COOLDOWN_MS) return undefined;
+		pending = refresh();
+		try {
+			cache = await pending;
+			const refreshedKey = cache.keys.get(kid);
+			if (freshCache || !refreshedKey) lastRefreshAt = Date.now();
+			return refreshedKey;
+		} catch (error) {
+			lastRefreshAt = Date.now();
+			throw error;
+		} finally {
+			pending = undefined;
+		}
+	};
+}
+
 export function createInteractionTokenVerifier(
 	authentication: GoogleChatInteractionAuthentication,
 	options: GoogleTokenVerifierOptions,
@@ -70,8 +97,7 @@ export function createInteractionTokenVerifier(
 
 	const fetcher = options.fetch ?? globalThis.fetch;
 	const certificatesUrl = authentication.certificatesUrl ?? DEFAULT_CHAT_CERTS_URL;
-	let cache: CachedKeys | undefined;
-	let lastUnknownKeyRefreshAt = 0;
+	const findKey = createSigningKeyCache(() => fetchX509Keys(fetcher, certificatesUrl));
 
 	return async (authorization) => {
 		const token = readBearerToken(authorization);
@@ -79,17 +105,7 @@ export function createInteractionTokenVerifier(
 		if (header.alg !== 'RS256' || typeof header.kid !== 'string' || !header.kid) {
 			throw new Error('Invalid Google Chat token header.');
 		}
-		const now = Date.now();
-		const freshCache = cache && cache.expiresAt > now ? cache : undefined;
-		let key = freshCache?.keys.get(header.kid);
-		if (!key) {
-			if (freshCache && now - lastUnknownKeyRefreshAt < UNKNOWN_KEY_REFRESH_COOLDOWN_MS) {
-				throw new Error('Unknown Google Chat signing key.');
-			}
-			if (freshCache) lastUnknownKeyRefreshAt = now;
-			cache = await fetchX509Keys(fetcher, certificatesUrl);
-			key = cache.keys.get(header.kid);
-		}
+		const key = await findKey(header.kid);
 		if (!key) throw new Error('Unknown Google Chat signing key.');
 		const result = await jwtVerify(token, key, {
 			algorithms: ['RS256'],
@@ -120,8 +136,7 @@ function createGoogleOidcVerifier(options: {
 }): (authorization: string | null) => Promise<JWTPayload> {
 	const fetcher = options.fetch ?? globalThis.fetch;
 	const jwksUrl = options.jwksUrl ?? DEFAULT_GOOGLE_JWKS_URL;
-	let cache: CachedKeys | undefined;
-	let lastUnknownKeyRefreshAt = 0;
+	const findKey = createSigningKeyCache(() => fetchJwks(fetcher, jwksUrl));
 
 	return async (authorization) => {
 		const token = readBearerToken(authorization);
@@ -129,17 +144,7 @@ function createGoogleOidcVerifier(options: {
 		if (header.alg !== 'RS256' || typeof header.kid !== 'string' || !header.kid) {
 			throw new Error('Invalid Google token header.');
 		}
-		const now = Date.now();
-		const freshCache = cache && cache.expiresAt > now ? cache : undefined;
-		let key = freshCache?.keys.get(header.kid);
-		if (!key) {
-			if (freshCache && now - lastUnknownKeyRefreshAt < UNKNOWN_KEY_REFRESH_COOLDOWN_MS) {
-				throw new Error('Unknown Google signing key.');
-			}
-			if (freshCache) lastUnknownKeyRefreshAt = now;
-			cache = await fetchJwks(fetcher, jwksUrl);
-			key = cache.keys.get(header.kid);
-		}
+		const key = await findKey(header.kid);
 		if (!key) throw new Error('Unknown Google signing key.');
 		const result = await jwtVerify(token, key, {
 			algorithms: ['RS256'],

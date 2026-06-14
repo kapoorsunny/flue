@@ -29,7 +29,7 @@ describe('@flue/google-chat workerd ingress', () => {
 					'ce-id': 'workerd-event',
 					'ce-source': '//workspaceevents.googleapis.com/subscriptions/workerd',
 					'ce-specversion': '1.0',
-					'ce-subject': '//chat.googleapis.com/spaces/workerd',
+					'ce-subject': '//chat.googleapis.com/spaces/-',
 					'ce-type': 'google.workspace.chat.space.v1.deleted',
 				},
 				data: btoa(JSON.stringify({ space: { name: 'spaces/workerd' } })),
@@ -37,6 +37,19 @@ describe('@flue/google-chat workerd ingress', () => {
 			},
 			subscription,
 			deliveryAttempt: 2,
+		};
+		const identityDelivery = {
+			message: {
+				attributes: {
+					...delivery.message.attributes,
+					'ce-id': 'workerd-identity-event',
+					'ce-subject': '//cloudidentity.googleapis.com/users/123456789',
+					'ce-type': 'google.workspace.identity.user.v1.updated',
+				},
+				data: btoa(JSON.stringify({ user: { name: 'users/123456789' } })),
+				messageId: 'workerd-identity-pubsub-message',
+			},
+			subscription,
 		};
 		const interactions = vi.fn(({ payload }) => ({ surface: 'interaction', type: payload.type }));
 		const workspaceEvents = vi.fn(({ delivery }) => ({
@@ -81,13 +94,23 @@ describe('@flue/google-chat workerd ingress', () => {
 			headers: { authorization: `Bearer ${pubsubToken}`, 'content-type': 'application/json' },
 			body: JSON.stringify(delivery),
 		});
+		const identityEventResponse = await app.request('/events', {
+			method: 'POST',
+			headers: { authorization: `Bearer ${pubsubToken}`, 'content-type': 'application/json' },
+			body: JSON.stringify(identityDelivery),
+		});
 
 		expect(interactionResponse.status).toBe(200);
 		expect(await interactionResponse.json()).toEqual({ surface: 'interaction', type: 'MESSAGE' });
 		expect(eventResponse.status).toBe(200);
 		expect(await eventResponse.json()).toEqual({ surface: 'event', attempt: 2 });
+		expect(identityEventResponse.status).toBe(200);
+		expect(await identityEventResponse.json()).toEqual({ surface: 'event' });
 		expect(interactions.mock.calls[0]?.[0].payload).toEqual(interactionPayload);
-		expect(workspaceEvents.mock.calls[0]?.[0].delivery).toEqual(delivery);
+		expect(workspaceEvents.mock.calls.map(([input]) => input.delivery)).toEqual([
+			delivery,
+			identityDelivery,
+		]);
 		expect(fetcher).toHaveBeenCalledTimes(2);
 	});
 
