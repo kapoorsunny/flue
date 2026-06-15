@@ -1,15 +1,25 @@
 ---
 title: GitHub
 description: Receive signed GitHub webhooks and use Octokit from application-owned tools.
+package:
+  name: '@flue/github'
+  href: https://www.npmjs.com/package/@flue/github
 ---
 
-## Add GitHub
+## Quickstart
 
-Run the GitHub blueprint through your coding agent:
+Add GitHub as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel github --print | codex
+flue add channel github
 ```
+
+## Configure
+
+| Variable                | Purpose                                              |
+| ----------------------- | ---------------------------------------------------- |
+| `GITHUB_WEBHOOK_SECRET` | **Required** — Verifies inbound deliveries.          |
+| `GITHUB_TOKEN`          | **Required** — Authenticates outbound Octokit calls. |
 
 It installs `@flue/github` for verified ingress and the official
 `@octokit/rest` SDK for outbound API calls. It creates
@@ -25,11 +35,8 @@ If `flue()` is mounted beneath an outer prefix, include that prefix. Set the
 content type to `application/json` (ingress is JSON-only; form-encoded
 deliveries are not accepted), set a webhook secret, and subscribe to the
 minimum event set the application handles. The example uses **Issue comments**
-and **Pull request review comments**.
-
-`GITHUB_WEBHOOK_SECRET` verifies inbound deliveries.
-`GITHUB_TOKEN` authenticates outbound Octokit calls. Keep them in the
-project's existing secret system.
+and **Pull request review comments**. Keep both credentials in the project's
+existing secret system.
 
 ## Channel module
 

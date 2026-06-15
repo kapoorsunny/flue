@@ -6,23 +6,26 @@ lastReviewedAt: 2026-06-01
 
 The Daytona adapter adapts an already-initialized Daytona sandbox from `@daytona/sdk` into Flue's sandbox interface. Use it when a Node-hosted application needs a provider-managed Linux environment with filesystem and shell operations.
 
-## Add the adapter
+## Quickstart
+
+Add Daytona as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox daytona
+flue add sandbox daytona
 ```
 
+## Configure
+
+| Variable          | Purpose                                            |
+| ----------------- | -------------------------------------------------- |
+| `DAYTONA_API_KEY` | **Required** — Authenticates with the Daytona API. |
+
+| Requirement                 | Purpose                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `@daytona/sdk` package      | **Required** — Creates the Daytona sandbox adapted by Flue.                                     |
+| Application-owned lifecycle | **Required** — Creates, retains, and deletes the sandbox, then passes it to `daytona(sandbox)`. |
+
 The generated adapter expects your application to create and own the Daytona sandbox. It does not decide sandbox identity, retention, or cleanup for you.
-
-## Requirements
-
-| Requirement         | Value                                                                          |
-| ------------------- | ------------------------------------------------------------------------------ |
-| Provider package    | `@daytona/sdk`                                                                 |
-| Credential          | `DAYTONA_API_KEY`                                                              |
-| Optional settings   | `DAYTONA_API_URL`, `DAYTONA_TARGET`                                            |
-| Integration shape   | Your code creates a Daytona sandbox, then passes it through `daytona(sandbox)` |
-| Lifecycle ownership | Your application owns creation, retention, and deletion                        |
 
 ## Typical use
 

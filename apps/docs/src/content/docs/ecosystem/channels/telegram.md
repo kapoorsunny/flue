@@ -1,15 +1,25 @@
 ---
 title: Telegram
 description: Receive verified Telegram Bot API Updates with a project-owned grammY client.
+package:
+  name: '@flue/telegram'
+  href: https://www.npmjs.com/package/@flue/telegram
 ---
 
-## Add Telegram
+## Quickstart
 
-Run the Telegram blueprint through your coding agent:
+Add Telegram as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel telegram --print | codex
+flue add channel telegram
 ```
+
+## Configure
+
+| Variable                        | Purpose                                              |
+| ------------------------------- | ---------------------------------------------------- |
+| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | **Required** — Verifies inbound webhook requests.    |
+| `TELEGRAM_BOT_TOKEN`            | **Required** — Authenticates outbound Bot API calls. |
 
 It installs `@flue/telegram` for verified ingress and grammY for project-owned
 Bot API access. grammY publishes a browser/Fetch build that runs in both Node
@@ -20,6 +30,35 @@ Set the webhook URL to:
 ```txt
 https://example.com/channels/telegram/webhook
 ```
+
+Generate an independent random webhook secret using only letters, numbers,
+underscores, and hyphens. Configure it with the full route:
+
+```ts
+await client.setWebhook('https://example.com/channels/telegram/webhook', {
+  secret_token: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN!,
+  allowed_updates: [
+    'message',
+    'edited_message',
+    'channel_post',
+    'edited_channel_post',
+    'business_message',
+    'edited_business_message',
+    'guest_message',
+    'callback_query',
+    'message_reaction',
+    'message_reaction_count',
+  ],
+});
+```
+
+Telegram sends the secret in `X-Telegram-Bot-Api-Secret-Token`.
+`@flue/telegram` rejects a missing or changed value before parsing the Update.
+Telegram does not sign the body or include a signed timestamp, so do not reuse
+one secret across bots.
+
+Webhook delivery and `getUpdates` polling are mutually exclusive. Polling is
+outside the HTTP channel package.
 
 ## Channel module
 
@@ -128,37 +167,6 @@ export default createAgent(({ id }) => ({
 
 Trusted code binds the chat, business connection, and optional topic. The model
 selects only message text.
-
-## Configure the webhook
-
-Generate an independent random webhook secret using only letters, numbers,
-underscores, and hyphens. Configure it with the full route:
-
-```ts
-await client.setWebhook('https://example.com/channels/telegram/webhook', {
-  secret_token: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN!,
-  allowed_updates: [
-    'message',
-    'edited_message',
-    'channel_post',
-    'edited_channel_post',
-    'business_message',
-    'edited_business_message',
-    'guest_message',
-    'callback_query',
-    'message_reaction',
-    'message_reaction_count',
-  ],
-});
-```
-
-Telegram sends the secret in `X-Telegram-Bot-Api-Secret-Token`.
-`@flue/telegram` rejects a missing or changed value before parsing the Update.
-Telegram does not sign the body or include a signed timestamp, so do not reuse
-one secret across bots.
-
-Webhook delivery and `getUpdates` polling are mutually exclusive. Polling is
-outside the HTTP channel package.
 
 ## Verified inbound
 

@@ -6,20 +6,22 @@ lastReviewedAt: 2026-05-30
 
 The smolvm adapter adapts an initialized `Machine` from `smolvm-embedded` into Flue's sandbox interface. Unlike a hosted sandbox service, smolvm runs locally through a host hypervisor.
 
-## Add the adapter
+## Quickstart
+
+Add smolvm as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox smolvm
+flue add sandbox smolvm
 ```
 
-## Requirements
+## Configure
 
-| Requirement          | Value                                                    |
-| -------------------- | -------------------------------------------------------- |
-| Provider package     | `smolvm-embedded`                                        |
-| Supported host shape | macOS or Linux host with suitable virtualization support |
-| Credential           | None required by smolvm itself                           |
-| Unsupported runtime  | Edge/Worker runtimes without local hypervisor execution  |
+| Requirement               | Purpose                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `smolvm-embedded` package | **Required** — Provides the initialized machine adapted by Flue.              |
+| macOS or Linux host       | **Required** — Supplies suitable local virtualization and hypervisor support. |
+| Credentials               | **Not required** — smolvm itself requires none.                               |
+| Edge or Worker runtime    | **Unsupported** — These runtimes cannot execute a local hypervisor.           |
 
 ## Choose this adapter when
 

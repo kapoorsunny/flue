@@ -1,19 +1,24 @@
 ---
 title: Valkey
 description: Give Flue agents and workflow runs durable, shared state with Valkey.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history in a persistent Valkey deployment.
 package:
   name: '@flue/redis'
   href: https://www.npmjs.com/package/@flue/redis
 ---
 
-## Add Valkey
+## Quickstart
 
-Run this command in your terminal or through your coding agent:
+Add Valkey as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database valkey
 ```
+
+## Configure
+
+| Variable     | Purpose                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `VALKEY_URL` | **Required** — Connection URL for a persistent standalone or single-shard Valkey deployment. |
 
 The blueprint installs `@flue/redis` and the official Redis `redis`
 (node-redis) client, then writes a source-root `db.ts`. Valkey implements the
@@ -22,8 +27,6 @@ Valkey and does not imply that every Redis-compatible provider is supported.
 
 This is a **Node.js** adapter. The Cloudflare target uses Durable Object SQLite
 and rejects `db.ts`.
-
-## Configure
 
 Set `VALKEY_URL` to a persistent standalone Valkey server or managed
 single-shard endpoint. Valkey Cluster and cache-only configurations are
@@ -43,10 +46,11 @@ await client.connect();
 
 export default redis({
   command: (command, args = []) => client.sendCommand([command, ...args.map(String)]),
-  eval: (script, keys, args = []) => client.eval(script, {
-    keys,
-    arguments: args.map(String),
-  }),
+  eval: (script, keys, args = []) =>
+    client.eval(script, {
+      keys,
+      arguments: args.map(String),
+    }),
   pipeline: async (commands) => {
     const multi = client.multi();
     for (const { command, args = [] } of commands) multi.addCommand([command, ...args.map(String)]);

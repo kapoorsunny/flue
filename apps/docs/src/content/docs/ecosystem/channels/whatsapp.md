@@ -1,15 +1,28 @@
 ---
 title: WhatsApp
 description: Receive verified WhatsApp Business Cloud deliveries with a project-owned Fetch client.
+package:
+  name: '@flue/whatsapp'
+  href: https://www.npmjs.com/package/@flue/whatsapp
 ---
 
-## Add WhatsApp
+## Quickstart
 
-Run the WhatsApp blueprint through your coding agent:
+Add WhatsApp as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel whatsapp --print | codex
+flue add channel whatsapp
 ```
+
+## Configure
+
+| Variable                       | Purpose                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| `WHATSAPP_APP_SECRET`          | **Required** — Verifies signed inbound webhook bodies.                       |
+| `WHATSAPP_VERIFY_TOKEN`        | **Required** — Verifies Meta's callback setup challenge.                     |
+| `WHATSAPP_ACCESS_TOKEN`        | **Required** — Authenticates outbound Graph API calls.                       |
+| `WHATSAPP_PHONE_NUMBER_ID`     | **Required** — Restricts handling to the configured phone number.            |
+| `WHATSAPP_BUSINESS_ACCOUNT_ID` | **Optional** — Restricts handling by business account as application policy. |
 
 It installs `@flue/whatsapp` for verified ingress and
 `@kapso/whatsapp-cloud-api` for project-owned Graph API access. `@flue/whatsapp`
@@ -22,6 +35,20 @@ Set the callback URL to:
 ```txt
 https://example.com/channels/whatsapp/webhook
 ```
+
+Configure the Meta app with the route above and a random
+`WHATSAPP_VERIFY_TOKEN`. Subscribe the WhatsApp Business Account to the
+`messages` field.
+
+Meta sends GET requests for `hub.challenge` verification and signs POST bodies
+with the app secret in `X-Hub-Signature-256`. The package verifies the exact
+bytes, then forwards Meta's provider-native payload unmodified. It does not
+filter by business account or phone number; restricting to your configured
+phone number (`metadata.phone_number_id`) or business account (`entry[].id`) is
+application policy, as the handler below shows.
+
+Use a system-user or business access token for production outbound calls. Keep
+Graph API versions explicit and test an upgrade before changing them.
 
 ## Channel module
 
@@ -140,22 +167,6 @@ export function postMessage(ref: WhatsAppConversationRef) {
 Bind the tool from the agent with
 `postMessage(channel.parseConversationKey(id))`. Trusted application code
 selects the destination; the model selects only message text.
-
-## Configure the webhook
-
-Configure the Meta app with the route above and a random
-`WHATSAPP_VERIFY_TOKEN`. Subscribe the WhatsApp Business Account to the
-`messages` field.
-
-Meta sends GET requests for `hub.challenge` verification and signs POST bodies
-with the app secret in `X-Hub-Signature-256`. The package verifies the exact
-bytes, then forwards Meta's provider-native payload unmodified. It does not
-filter by business account or phone number; restricting to your configured
-phone number (`metadata.phone_number_id`) or business account (`entry[].id`) is
-application policy, as the handler above shows.
-
-Use a system-user or business access token for production outbound calls. Keep
-Graph API versions explicit and test an upgrade before changing them.
 
 ## Delivery behavior
 

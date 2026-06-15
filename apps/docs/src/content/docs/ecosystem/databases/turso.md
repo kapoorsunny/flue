@@ -1,21 +1,29 @@
 ---
 title: Turso
 description: Give Flue agents and workflow runs durable, hosted state with Turso — managed, replicated libSQL.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history in hosted Turso, with optional embedded replicas for low-latency reads.
 package:
   name: '@flue/libsql'
   href: https://www.npmjs.com/package/@flue/libsql
 ---
 
-## Add Turso
+## Quickstart
 
-Add [Turso](https://turso.tech)-backed persistence to any existing Flue project
-by running the following command in your terminal, or your coding agent of
-choice.
+Add Turso as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database turso
 ```
+
+## Configure
+
+| Variable             | Purpose                                        |
+| -------------------- | ---------------------------------------------- |
+| `TURSO_DATABASE_URL` | **Required** — The database's `libsql://` URL. |
+| `TURSO_AUTH_TOKEN`   | **Required** — Auth token for the database.    |
+
+`createClient` reads these at runtime — they are not baked into the build. For
+local development, `flue dev --env <file>` and `flue run --env <file>` load any
+`.env`-format file. In production, supply them from your platform's secret store.
 
 Turso is hosted, replicated libSQL. The blueprint installs `@flue/libsql` and
 the official `@libsql/client`, and writes a source-root `db.ts` that wraps the
@@ -40,19 +48,6 @@ turso db show --url flue-agents      # → TURSO_DATABASE_URL (libsql://…)
 turso db tokens create flue-agents   # → TURSO_AUTH_TOKEN
 ```
 
-## Configure
-
-Set these application secrets:
-
-| Variable             | Purpose                                            |
-| -------------------- | -------------------------------------------------- |
-| `TURSO_DATABASE_URL` | The database's `libsql://` URL.                    |
-| `TURSO_AUTH_TOKEN`   | Auth token for the database.                       |
-
-`createClient` reads these at runtime — they are not baked into the build. For
-local development, `flue dev --env <file>` and `flue run --env <file>` load any
-`.env`-format file. In production, supply them from your platform's secret store.
-
 ```ts title="src/db.ts"
 import { libsql } from '@flue/libsql';
 import { createClient, type ResultSet } from '@libsql/client';
@@ -66,14 +61,12 @@ const toRows = (rs: ResultSet) =>
   rs.rows.map((row) => Object.fromEntries(rs.columns.map((column) => [column, row[column]])));
 
 export default libsql({
-  query: async (text, params = []) =>
-    toRows(await client.execute({ sql: text, args: params })),
+  query: async (text, params = []) => toRows(await client.execute({ sql: text, args: params })),
   transaction: async (fn) => {
     const tx = await client.transaction('write');
     try {
       const result = await fn({
-        query: async (text, params = []) =>
-          toRows(await tx.execute({ sql: text, args: params })),
+        query: async (text, params = []) => toRows(await tx.execute({ sql: text, args: params })),
       });
       await tx.commit();
       return result;
@@ -121,12 +114,12 @@ database written by a newer Flue refuses to start rather than corrupting state.
 
 A Flue database stores runtime state, not your whole application.
 
-| Stored by Flue | Not stored by Flue |
-| --- | --- |
-| Agent session messages and compaction state | Sandbox files and installed dependencies |
-| Accepted direct prompts and `dispatch(...)` submissions | External API side effects |
-| Workflow-run records and persisted events | Application-owned business data unless your own tools store it |
-| Run indexing for `/runs` lookups and `listRuns()` | Provider credentials or secrets |
+| Stored by Flue                                          | Not stored by Flue                                             |
+| ------------------------------------------------------- | -------------------------------------------------------------- |
+| Agent session messages and compaction state             | Sandbox files and installed dependencies                       |
+| Accepted direct prompts and `dispatch(...)` submissions | External API side effects                                      |
+| Workflow-run records and persisted events               | Application-owned business data unless your own tools store it |
+| Run indexing for `/runs` lookups and `listRuns()`       | Provider credentials or secrets                                |
 
 See [Durable Agents](/docs/concepts/durable-execution/) for how recovery uses
 submission state, and the [Data Persistence API](/docs/api/data-persistence-api/)

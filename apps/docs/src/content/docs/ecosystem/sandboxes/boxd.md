@@ -6,24 +6,28 @@ lastReviewedAt: 2026-05-30
 
 The boxd adapter adapts an already-initialized boxd `Box` from `@boxd-sh/sdk` into Flue's sandbox interface. Use it when an agent needs a provider-backed Linux virtual machine with filesystem and shell behavior rather than the lightweight default workspace.
 
-## Add the adapter
+## Quickstart
 
-Run the adapter installation flow in your Flue project:
+Add boxd as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox boxd
+flue add sandbox boxd
 ```
 
+## Configure
+
+| Variable       | Purpose                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `BOXD_API_KEY` | **Alternative authentication** — Authenticates with boxd when a short-lived token is not used.                     |
+| `BOXD_TOKEN`   | **Alternative authentication** — Provides provider-supported short-lived authentication instead of `BOXD_API_KEY`. |
+
+| Requirement                 | Purpose                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| One boxd credential         | **Required** — Uses either `BOXD_API_KEY` or `BOXD_TOKEN`.       |
+| `@boxd-sh/sdk` package      | **Required** — Creates the Linux VM adapted to `SandboxFactory`. |
+| Application-owned lifecycle | **Required** — Creates, reuses, and deletes the VM.              |
+
 The generated adapter expects your application to create and own the boxd VM. It does not decide VM identity, retention, or cleanup for you.
-
-## Requirements
-
-| Requirement         | Value                                                          |
-| ------------------- | -------------------------------------------------------------- |
-| Provider package    | `@boxd-sh/sdk`                                                 |
-| Credential          | `BOXD_API_KEY`, or provider-supported short-lived `BOXD_TOKEN` |
-| Execution shape     | Linux VM adapted to `SandboxFactory`                           |
-| Lifecycle ownership | Your application owns creation, reuse, and deletion            |
 
 ## Use it when
 

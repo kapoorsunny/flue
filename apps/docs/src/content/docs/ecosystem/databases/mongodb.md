@@ -1,19 +1,36 @@
 ---
 title: MongoDB
 description: Give Flue agents and workflow runs durable, shared state with MongoDB.
-subtitle: Persist sessions, accepted submissions, and workflow-run history in a transaction-capable MongoDB deployment.
 package:
   name: '@flue/mongodb'
   href: https://www.npmjs.com/package/@flue/mongodb
 ---
 
-## Add MongoDB
+## Quickstart
 
-Run this command in your terminal or through your coding agent:
+Add MongoDB as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database mongodb
 ```
+
+## Configure
+
+| Variable           | Purpose                                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URL`      | **Required** — MongoDB connection string, including credentials and TLS options when required.                        |
+| `MONGODB_DATABASE` | **Optional** — Explicit database name for Flue state; recommended when the URL does not select the intended database. |
+
+The official driver reads these values at runtime. Never commit credentials.
+For local development, `flue dev --env <file>` and `flue run --env <file>` load
+any `.env`-format file; use the deployment platform's secret store in
+production.
+
+`client.db(undefined)` can select the database from the connection string (or
+the driver's default), but setting `MONGODB_DATABASE` explicitly avoids an
+ambiguous deployment. Prefer a dedicated database. If Flue must share one, pass
+a stable unique `collectionPrefix` to `mongodb()`; changing it selects a new
+namespace rather than moving existing data.
 
 The blueprint installs `@flue/mongodb` and the official `mongodb` driver, then
 writes a complete source-root `db.ts` runner. Flue discovers the file at build
@@ -41,26 +58,6 @@ with replica-set mode enabled and initialized once as a one-member set. Follow
 the instructions for your existing installation or container setup; the
 production requirements and operational tradeoffs remain those of a replica
 set.
-
-## Configure
-
-Set the following runtime values:
-
-| Variable           | Purpose                                                                         |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `MONGODB_URL`      | MongoDB connection string, including credentials and TLS options when required. |
-| `MONGODB_DATABASE` | Dedicated database name for Flue state.                                         |
-
-The official driver reads these values at runtime. Never commit credentials.
-For local development, `flue dev --env <file>` and `flue run --env <file>` load
-any `.env`-format file; use the deployment platform's secret store in
-production.
-
-`client.db(undefined)` can select the database from the connection string (or
-the driver's default), but setting `MONGODB_DATABASE` explicitly avoids an
-ambiguous deployment. Prefer a dedicated database. If Flue must share one, pass
-a stable unique `collectionPrefix` to `mongodb()`; changing it selects a new
-namespace rather than moving existing data.
 
 ## Transactions and the driver runner
 

@@ -6,20 +6,29 @@ lastReviewedAt: 2026-05-30
 
 The exe.dev adapter adapts an existing exe.dev VM into Flue's sandbox interface using SSH for commands and SFTP for files. Because it depends on Node.js APIs and `ssh2`, use it with the Node target rather than a Cloudflare Worker target.
 
-## Add the adapter
+## Quickstart
+
+Add exe.dev as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox exedev
+flue add sandbox exedev
 ```
 
-## Requirements
+## Configure
 
-| Requirement     | Value                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| Target          | Node.js                                                                                         |
-| Package         | `ssh2`                                                                                          |
-| Remote resource | An existing exe.dev VM reachable by SSH                                                         |
-| Authentication  | SSH configuration; optional provider API credentials when your application manages VM lifecycle |
+| Variable        | Purpose                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| `EXE_VM_HOST`   | **Required** — Identifies the exe.dev VM used to wire the sandbox adapter.                    |
+| `EXE_SSH_KEY`   | **Optional** — Points to a private SSH key file.                                              |
+| `SSH_AUTH_SOCK` | **Optional** — Authenticates through an SSH agent instead of `EXE_SSH_KEY`.                   |
+| `EXE_API_TOKEN` | **Required for lifecycle examples** — Authenticates helpers that manage exe.dev VM lifecycle. |
+
+| Requirement                       | Purpose                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------- |
+| Node.js target                    | **Required** — Provides the Node APIs used by the adapter and SSH client. |
+| `ssh2` package                    | **Required** — Provides SSH command execution and SFTP file access.       |
+| Existing SSH-reachable exe.dev VM | **Required** — Supplies the remote sandbox resource.                      |
+| SSH configuration                 | **Required** — Authenticates access to the VM.                            |
 
 ## Choose this adapter when
 

@@ -5,7 +5,24 @@ description: Run Flue agent work inside Cloudflare container-backed sandboxes.
 
 Cloudflare Sandbox uses `@cloudflare/sandbox` to provide a container-backed Linux environment to a Flue application deployed on Cloudflare. This integration is platform-native: it is not an adapter module for a Node-target application.
 
-## Use the Cloudflare target
+## Quickstart
+
+Add Cloudflare Sandbox as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
+
+```bash
+flue add sandbox cloudflare
+```
+
+## Configure
+
+| Requirement                                  | Purpose                                                                                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Cloudflare target                            | **Required** — Runs the platform-native sandbox integration.                                                                 |
+| `@cloudflare/sandbox` package                | **Required** — Provides the Sandbox Durable Object and RPC client.                                                           |
+| Container image                              | **Required** — Defines the Linux filesystem and command environment.                                                         |
+| Durable Object/container binding             | **Required on Cloudflare** — Exposes the sandbox through Wrangler platform configuration; it is not an environment variable. |
+| Stable sandbox identity and retention policy | **Required** — Controls lifecycle and reuse for the application.                                                             |
+| Environment-variable credentials             | **Not required** — The platform integration uses Cloudflare bindings and deployment configuration instead.                   |
 
 Cloudflare Sandbox requires a Worker deployment, Durable Object/container configuration, and a container image. Add the dependency to a Cloudflare-targeted project and export its Durable Object class from your Cloudflare deployment module:
 
@@ -29,16 +46,6 @@ export default createAgent<unknown, Env>(({ id, env }) => ({
   cwd: '/workspace',
 }));
 ```
-
-## Requirements
-
-| Requirement            | Value                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Target                 | Cloudflare only                                                                |
-| Package                | `@cloudflare/sandbox`                                                          |
-| Platform configuration | Container image and Durable Object/container binding in Wrangler configuration |
-| Environment            | Linux container filesystem and command behavior                                |
-| Lifecycle identity     | Choose stable sandbox identity and retention appropriate to your application   |
 
 ## Choose this integration when
 

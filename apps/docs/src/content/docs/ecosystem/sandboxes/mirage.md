@@ -6,18 +6,22 @@ lastReviewedAt: 2026-05-30
 
 The Mirage adapter adapts an application-owned Mirage `Workspace` into Flue's sandbox interface. Mirage offers runtime packages for Node and browser-class runtimes, allowing the adapter pattern to be used on Node or Cloudflare when you choose compatible resources.
 
-## Add the adapter
+## Quickstart
+
+Add Mirage as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox mirage
+flue add sandbox mirage
 ```
 
-## Requirements
+## Configure
 
-| Target     | Runtime package             | Notes                                            |
-| ---------- | --------------------------- | ------------------------------------------------ |
-| Node.js    | `@struktoai/mirage-node`    | Can use Node-compatible Mirage resources.        |
-| Cloudflare | `@struktoai/mirage-browser` | Use browser-compatible Workspace resources only. |
+| Requirement                              | Purpose                                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@struktoai/mirage-node` package         | **Required on Node.js** — Provides Node-compatible Mirage Workspace resources.            |
+| `@struktoai/mirage-browser` package      | **Required on Cloudflare** — Provides browser-compatible Workspace resources only.        |
+| Application-owned resource configuration | **Required** — Defines mounts, credentials, writable boundaries, and lifetime.            |
+| Environment-variable credentials         | **Not required** — Mirage resource credentials are configured by the application instead. |
 
 The generated adapter uses Mirage's shared workspace contract. Some Mirage resources, such as SSH- or database-oriented Node resources, require the Node runtime and must not be imported into a Cloudflare build.
 

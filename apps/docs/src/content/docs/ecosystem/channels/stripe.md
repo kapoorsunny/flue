@@ -1,15 +1,25 @@
 ---
 title: Stripe
 description: Receive verified Stripe webhooks and use the official SDK from application-owned tools.
+package:
+  name: '@flue/stripe'
+  href: https://www.npmjs.com/package/@flue/stripe
 ---
 
-## Add Stripe
+## Quickstart
 
-Run the Stripe blueprint through your coding agent:
+Add Stripe as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel stripe --print | codex
+flue add channel stripe
 ```
+
+## Configure
+
+| Variable                | Purpose                                          |
+| ----------------------- | ------------------------------------------------ |
+| `STRIPE_WEBHOOK_SECRET` | **Required** — Verifies inbound deliveries.      |
+| `STRIPE_SECRET_KEY`     | **Required** — Authenticates outbound SDK calls. |
 
 It installs `@flue/stripe` and Stripe's official `stripe` SDK. The SDK verifies
 inbound payloads and remains the project-owned client for outbound API calls.
@@ -23,10 +33,7 @@ https://example.com/channels/stripe/webhook
 ```
 
 If `flue()` is mounted beneath an outer prefix, include that prefix. Subscribe
-only to event types the application handles.
-
-`STRIPE_WEBHOOK_SECRET` verifies inbound deliveries.
-`STRIPE_SECRET_KEY` authenticates outbound SDK calls. Keep them in the
+only to event types the application handles. Keep both credentials in the
 project's existing secret system.
 
 ## Channel module

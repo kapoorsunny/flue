@@ -1,19 +1,29 @@
 ---
 title: MySQL
 description: Give Flue agents and workflow runs durable, shared state with MySQL 8 and InnoDB.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history in MySQL so state survives restarts and is shared across replicas.
 package:
   name: '@flue/mysql'
   href: https://www.npmjs.com/package/@flue/mysql
 ---
 
-## Add MySQL
+## Quickstart
 
-Add MySQL-backed persistence to an existing Flue project with:
+Add MySQL as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database mysql
 ```
+
+## Configure
+
+| Variable    | Purpose                                                                     |
+| ----------- | --------------------------------------------------------------------------- |
+| `MYSQL_URL` | **Required** — MySQL connection string, supplied by your database provider. |
+
+The driver reads this value at runtime. Supply it through your platform's
+secret store, never commit it, and configure `mysql2` TLS options when your
+provider requires them. For local development, `flue dev --env <file>` and
+`flue run --env <file>` load any `.env`-format file.
 
 The blueprint installs `@flue/mysql` and `mysql2`, then writes a source-root
 `db.ts`. Flue discovers that file at build time and wires it into the generated
@@ -22,19 +32,6 @@ Node server.
 `@flue/mysql` supports **MySQL 8 with InnoDB** on the **Node.js target**. The
 Cloudflare target uses Durable Object SQLite automatically and rejects `db.ts`
 at build time. See [Database](/docs/guide/database/) for persistence by target.
-
-## Configure
-
-Set one application secret:
-
-| Variable | Purpose |
-| --- | --- |
-| `MYSQL_URL` | MySQL connection string, supplied by your database provider. |
-
-The driver reads this value at runtime. Supply it through your platform's
-secret store, never commit it, and configure `mysql2` TLS options when your
-provider requires them. For local development, `flue dev --env <file>` and
-`flue run --env <file>` load any `.env`-format file.
 
 ## Bring your own driver
 
@@ -97,12 +94,12 @@ newer Flue version refuses to start rather than risking incompatible writes.
 
 A Flue database stores runtime state, not your whole application.
 
-| Stored by Flue | Not stored by Flue |
-| --- | --- |
+| Stored by Flue                                                       | Not stored by Flue                       |
+| -------------------------------------------------------------------- | ---------------------------------------- |
 | Agent session messages, compaction state, and persisted image chunks | Sandbox files and installed dependencies |
-| Accepted direct prompts and `dispatch(...)` submissions | External API side effects |
-| Durable turn journals, claims, and leases | Application-owned business data |
-| Workflow-run records, persisted events, and run indexes | Provider credentials or secrets |
+| Accepted direct prompts and `dispatch(...)` submissions              | External API side effects                |
+| Durable turn journals, claims, and leases                            | Application-owned business data          |
+| Workflow-run records, persisted events, and run indexes              | Provider credentials or secrets          |
 
 See [Durable Agents](/docs/concepts/durable-execution/) for recovery behavior
 and the [Data Persistence API](/docs/api/data-persistence-api/) for the adapter

@@ -1,7 +1,6 @@
 ---
 title: OpenTelemetry
 description: Export Flue workflows, operations, model turns, tools, tasks, compactions, and logs as OpenTelemetry traces.
-subtitle: Add metadata-first Flue tracing to an application-owned OpenTelemetry SDK and exporter.
 package:
   name: '@flue/opentelemetry'
   href: https://www.npmjs.com/package/@flue/opentelemetry
@@ -11,7 +10,7 @@ package:
 
 See [Observability](/docs/guide/observability/) to inspect workflow runs, understand the observer model, and compare integrations.
 
-## Add OpenTelemetry
+## Quickstart
 
 Install the adapter and OpenTelemetry API alongside an SDK and exporter appropriate for your deployment target:
 
@@ -19,13 +18,18 @@ Install the adapter and OpenTelemetry API alongside an SDK and exporter appropri
 pnpm add @flue/opentelemetry @opentelemetry/api
 ```
 
+## Configure
+
+| Requirement                                  | Purpose                                                                                                                     |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| OpenTelemetry SDK                            | **Required for tracing** — Provides tracing for the deployment runtime and must be configured before observer registration. |
+| OpenTelemetry exporter                       | **Required for span delivery** — Delivers spans to the selected observability backend.                                      |
+| Sampling, credentials, and shutdown behavior | **Application-specific** — Controls collection, authenticates delivery when needed, and flushes pending spans.              |
+
 Configure the SDK before registering the Flue observer once in your application entrypoint:
 
 ```ts title="src/app.ts"
-import {
-  createOpenTelemetryObserver,
-  observedEventTypes,
-} from '@flue/opentelemetry';
+import { createOpenTelemetryObserver, observedEventTypes } from '@flue/opentelemetry';
 import { observe } from '@flue/runtime';
 import { flue } from '@flue/runtime/routing';
 import { Hono } from 'hono';
@@ -44,15 +48,15 @@ The adapter uses `trace.getTracer('@flue/opentelemetry')` by default. Pass `{ tr
 
 ## What the adapter traces
 
-| Flue activity | OpenTelemetry representation |
-| --- | --- |
-| Workflow invocation | `flue.workflow <name>` span |
-| Finite agent operation | `flue.operation <kind>` span |
-| Model turn | `chat <model>` client span with GenAI attributes |
-| Tool call | `flue.tool <name>` span |
-| Delegated task | `flue.task <agent>` span |
-| Context compaction | `flue.compaction` span |
-| Flue log | `flue.log` event on the nearest tracked span |
+| Flue activity          | OpenTelemetry representation                     |
+| ---------------------- | ------------------------------------------------ |
+| Workflow invocation    | `flue.workflow <name>` span                      |
+| Finite agent operation | `flue.operation <kind>` span                     |
+| Model turn             | `chat <model>` client span with GenAI attributes |
+| Tool call              | `flue.tool <name>` span                          |
+| Delegated task         | `flue.task <agent>` span                         |
+| Context compaction     | `flue.compaction` span                           |
+| Flue log               | `flue.log` event on the nearest tracked span     |
 
 Spans include applicable Flue correlation fields and event indexes. Model-turn spans record token usage and estimated cost as attributes; the package does not create native OpenTelemetry metrics. Operation and compaction usage values are roll-ups, so do not sum them with nested model-turn values. Nested durations can also overlap.
 
@@ -64,10 +68,7 @@ Workflow and standalone operation spans start as independent roots by default. U
 
 ```ts title="src/app.ts"
 import { context, propagation } from '@opentelemetry/api';
-import {
-  createOpenTelemetryObserver,
-  observedEventTypes,
-} from '@flue/opentelemetry';
+import { createOpenTelemetryObserver, observedEventTypes } from '@flue/opentelemetry';
 import { observe } from '@flue/runtime';
 
 observe(
@@ -75,10 +76,7 @@ observe(
     resolveRootContext(_event, ctx) {
       if (!ctx.req) return undefined;
 
-      return propagation.extract(
-        context.active(),
-        Object.fromEntries(ctx.req.headers),
-      );
+      return propagation.extract(context.active(), Object.fromEntries(ctx.req.headers));
     },
   }),
   { types: observedEventTypes },

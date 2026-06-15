@@ -1,15 +1,27 @@
 ---
 title: Intercom
 description: Receive verified Intercom notifications and use a workspace-bound official client from application-owned tools.
+package:
+  name: '@flue/intercom'
+  href: https://www.npmjs.com/package/@flue/intercom
 ---
 
-## Add Intercom
+## Quickstart
 
-Run the Intercom blueprint through your coding agent:
+Add Intercom as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel intercom --print | codex
+flue add channel intercom
 ```
+
+## Configure
+
+| Variable                 | Purpose                                                               |
+| ------------------------ | --------------------------------------------------------------------- |
+| `INTERCOM_CLIENT_SECRET` | **Required** — Verifies inbound notifications.                        |
+| `INTERCOM_ACCESS_TOKEN`  | **Required** — Authenticates outbound API calls.                      |
+| `INTERCOM_WORKSPACE_ID`  | **Required** — Restricts resource identity to one Intercom workspace. |
+| `INTERCOM_REGION`        | **Optional** — Selects `us`, `eu`, or `au`; defaults to `us`.         |
 
 It installs `@flue/intercom` and the official
 `intercom-client@7.0.3`. The blueprint creates named `channel` and project-owned
@@ -22,11 +34,7 @@ https://example.com/channels/intercom/webhook
 ```
 
 Intercom validates that URL with `HEAD` and sends notifications to it with
-`POST`.
-
-`INTERCOM_CLIENT_SECRET` verifies inbound notifications.
-`INTERCOM_ACCESS_TOKEN` authenticates outbound API calls. They are separate
-credentials.
+`POST`. The client secret and outbound access token are separate credentials.
 
 ## Channel module
 

@@ -1,15 +1,29 @@
 ---
 title: Zendesk
 description: Receive verified Zendesk events and use a ticket-bound Fetch client from application-owned tools.
+package:
+  name: '@flue/zendesk'
+  href: https://www.npmjs.com/package/@flue/zendesk
 ---
 
-## Add Zendesk
+## Quickstart
 
-Run the Zendesk blueprint through your coding agent:
+Add Zendesk as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel zendesk --print | codex
+flue add channel zendesk
 ```
+
+## Configure
+
+| Variable                         | Purpose                                                                |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `ZENDESK_WEBHOOK_SIGNING_SECRET` | **Required** — Verifies inbound event bodies.                          |
+| `ZENDESK_ACCOUNT_ID`             | **Required** — Restricts events and resource identity to one account.  |
+| `ZENDESK_WEBHOOK_ID`             | **Optional** — Restricts deliveries to one configured webhook.         |
+| `ZENDESK_SUBDOMAIN`              | **Required** — Selects the account's Ticketing API origin.             |
+| `ZENDESK_EMAIL`                  | **Required** — Identifies the API-token user for Basic authentication. |
+| `ZENDESK_API_TOKEN`              | **Required** — Authenticates outbound Ticketing API requests.          |
 
 It installs `@flue/zendesk` and creates a channel module with named `channel`
 and project-owned `client` exports. Zendesk has no officially supported Node
@@ -22,9 +36,7 @@ Create a JSON event-subscription webhook with:
 https://example.com/channels/zendesk/webhook
 ```
 
-`ZENDESK_WEBHOOK_SIGNING_SECRET` verifies inbound events.
-`ZENDESK_API_TOKEN` authenticates outbound Ticketing API requests. They are
-separate credentials.
+The webhook signing secret and outbound API token are separate credentials.
 
 ## Channel module
 

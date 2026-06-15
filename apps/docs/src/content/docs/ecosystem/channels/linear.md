@@ -1,15 +1,27 @@
 ---
 title: Linear
 description: Receive verified Linear resource and agent-session webhooks with a project-owned SDK client.
+package:
+  name: '@flue/linear'
+  href: https://www.npmjs.com/package/@flue/linear
 ---
 
-## Add Linear
+## Quickstart
 
-Run the Linear blueprint through your coding agent:
+Add Linear as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel linear --print | codex
+flue add channel linear
 ```
+
+## Configure
+
+| Variable                 | Purpose                                                                 |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `LINEAR_WEBHOOK_SECRET`  | **Required** — Verifies inbound webhook deliveries.                     |
+| `LINEAR_API_KEY`         | **Required** — Authenticates the example's outbound SDK client.         |
+| `LINEAR_ORGANIZATION_ID` | **Optional** — Restricts inbound deliveries to one Linear organization. |
+| `LINEAR_WEBHOOK_ID`      | **Optional** — Restricts inbound deliveries to one configured webhook.  |
 
 It installs `@flue/linear` for verified ingress and the official
 `@linear/sdk` for project-owned outbound API access. Linear uses that SDK in

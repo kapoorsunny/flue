@@ -6,20 +6,25 @@ lastReviewedAt: 2026-05-30
 
 The E2B adapter adapts an initialized E2B sandbox from the `e2b` package into Flue's sandbox interface. Use it for provider-managed Linux execution when an agent needs shell commands and workspace files outside the application host.
 
-## Add the adapter
+## Quickstart
+
+Add E2B as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox e2b
+flue add sandbox e2b
 ```
 
-## Requirements
+## Configure
 
-| Requirement         | Value                                                      |
-| ------------------- | ---------------------------------------------------------- |
-| Provider package    | `e2b`                                                      |
-| Credential          | `E2B_API_KEY`                                              |
-| Environment         | Provider-managed Linux sandbox                             |
-| Lifecycle ownership | Your application creates and closes or retains the sandbox |
+| Variable      | Purpose                                        |
+| ------------- | ---------------------------------------------- |
+| `E2B_API_KEY` | **Required** — Authenticates with the E2B API. |
+
+| Requirement                    | Purpose                                                                     |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `e2b` package                  | **Required** — Provides the initialized E2B sandbox adapted by Flue.        |
+| Provider-managed Linux sandbox | **Required** — Supplies the command and filesystem environment.             |
+| Application-owned lifecycle    | **Required** — Creates the sandbox and closes or retains it as appropriate. |
 
 ## Integration shape
 

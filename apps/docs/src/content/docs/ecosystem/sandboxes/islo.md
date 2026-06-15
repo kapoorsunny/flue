@@ -6,20 +6,26 @@ lastReviewedAt: 2026-05-30
 
 The islo adapter adapts a named islo sandbox into Flue's sandbox interface by invoking the local `islo` CLI. It is designed for a Node.js server, container, or CI runner where the binary is installed and can launch remote commands.
 
-## Add the adapter
+## Quickstart
+
+Add islo as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox islo
+flue add sandbox islo
 ```
 
-## Requirements
+## Configure
 
-| Requirement        | Value                                                                            |
-| ------------------ | -------------------------------------------------------------------------------- |
-| Target             | Node.js or another host with Node child-process capability                       |
-| Runtime dependency | The `islo` binary installed on `PATH`                                            |
-| Credential         | Existing CLI authentication or `ISLO_API_KEY` for server/CI operation            |
-| Sandbox identity   | A named islo sandbox created and managed by your application or deployment setup |
+| Variable       | Purpose                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ISLO_API_KEY` | **Alternative authentication** — Authenticates server or CI operation when existing CLI authentication is unavailable. |
+
+| Requirement                            | Purpose                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------- |
+| Existing CLI authentication or API key | **Required** — Authenticates through the CLI session or `ISLO_API_KEY`.   |
+| Node.js child-process capability       | **Required** — Allows the adapter to invoke the CLI.                      |
+| `islo` binary on `PATH`                | **Required** — Executes remote shell and file operations.                 |
+| Named islo sandbox                     | **Required** — Identifies the application- or deployment-managed sandbox. |
 
 ## Choose this adapter when
 

@@ -1,15 +1,27 @@
 ---
 title: Facebook Messenger
 description: Receive verified Messenger Page events with a project-owned Graph API client.
+package:
+  name: '@flue/messenger'
+  href: https://www.npmjs.com/package/@flue/messenger
 ---
 
-## Add Messenger
+## Quickstart
 
-Run the Messenger blueprint through your coding agent:
+Add Facebook Messenger as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel messenger --print | codex
+flue add channel messenger
 ```
+
+## Configure
+
+| Variable                      | Purpose                                                           |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `MESSENGER_APP_SECRET`        | **Required** — Verifies signed inbound webhook bodies.            |
+| `MESSENGER_VERIFY_TOKEN`      | **Required** — Verifies Meta's callback setup challenge.          |
+| `MESSENGER_PAGE_ID`           | **Required** — Restricts inbound events and binds outbound sends. |
+| `MESSENGER_PAGE_ACCESS_TOKEN` | **Required** — Authenticates outbound Graph API calls.            |
 
 It installs `@flue/messenger` for verified Page ingress and creates an editable
 Graph API Fetch client for outbound messages. The same client runs in Node and
@@ -20,6 +32,20 @@ Configure Meta to use:
 ```txt
 https://example.com/channels/messenger/webhook
 ```
+
+Set the app secret, your chosen verify token, the fixed Page id, and a Page
+access token. The GET route answers Meta's verification challenge. The POST
+route validates the exact body with `X-Hub-Signature-256` before parsing any
+events.
+
+Connect the app to the Page and subscribe only to the webhook fields the
+application handles. A useful starting set is `messages`, `message_echoes`,
+`message_edits`, `messaging_postbacks`, `message_reactions`,
+`message_deliveries`, `message_reads`, `messaging_optins`, and
+`messaging_referrals`.
+
+The app secret is an inbound verification credential. The Page access token is
+an outbound Graph credential. Keep both in trusted server configuration.
 
 ## Channel module
 
@@ -92,22 +118,6 @@ export function postMessage(ref: MessengerConversationRef) {
 The blueprint creates `src/messenger-client.ts` with the Fetch client used above.
 Bind the tool from the agent with
 `postMessage(channel.parseConversationKey(id))`.
-
-## Configure verification
-
-Set the app secret, your chosen verify token, the fixed Page id, and a Page
-access token. The GET route answers Meta's verification challenge. The POST
-route validates the exact body with `X-Hub-Signature-256` before parsing any
-events.
-
-Connect the app to the Page and subscribe only to the webhook fields the
-application handles. A useful starting set is `messages`, `message_echoes`,
-`message_edits`, `messaging_postbacks`, `message_reactions`,
-`message_deliveries`, `message_reads`, `messaging_optins`, and
-`messaging_referrals`.
-
-The app secret is an inbound verification credential. The Page access token is
-an outbound Graph credential. Keep both in trusted server configuration.
 
 ## Delivery behavior
 

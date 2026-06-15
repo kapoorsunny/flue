@@ -6,20 +6,25 @@ lastReviewedAt: 2026-05-30
 
 The Vercel Sandbox adapter adapts an initialized `@vercel/sandbox` `Sandbox` into Flue's sandbox interface. Use it when application code should execute agent work inside a Vercel-managed sandbox rather than on its host filesystem.
 
-## Add the adapter
+## Quickstart
+
+Add Vercel Sandbox as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox vercel
+flue add sandbox vercel
 ```
 
-## Requirements
+## Configure
 
-| Requirement         | Value                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------- |
-| Provider package    | `@vercel/sandbox`                                                                     |
-| Authentication      | `VERCEL_OIDC_TOKEN` or the authentication flow appropriate to your Vercel environment |
-| Integration shape   | Application creates a sandbox, then passes it through the generated adapter           |
-| Lifecycle ownership | Your application decides retention and cleanup                                        |
+| Variable            | Purpose                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `VERCEL_OIDC_TOKEN` | **Required for OIDC authentication** — Injected automatically on Vercel; set it explicitly when using OIDC locally. |
+
+| Requirement                     | Purpose                                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Vercel-supported authentication | **Required** — Uses OIDC on Vercel or an access token or other supported authentication flow outside Vercel. |
+| `@vercel/sandbox` package       | **Required** — Creates the Vercel Sandbox adapted by Flue.                                                   |
+| Application-owned lifecycle     | **Required** — Creates the sandbox and decides its retention and cleanup.                                    |
 
 ## Typical use
 

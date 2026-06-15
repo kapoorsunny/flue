@@ -1,15 +1,26 @@
 ---
 title: Microsoft Teams
 description: Receive authenticated Teams activities and use a project-owned Bot Connector client.
+package:
+  name: '@flue/teams'
+  href: https://www.npmjs.com/package/@flue/teams
 ---
 
-## Add Microsoft Teams
+## Quickstart
 
-Run the Teams blueprint through your coding agent:
+Add Microsoft Teams as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel teams --print | codex
+flue add channel teams
 ```
+
+## Configure
+
+| Variable             | Purpose                                               |
+| -------------------- | ----------------------------------------------------- |
+| `TEAMS_APP_ID`       | **Required** — Constrains the inbound JWT audience.   |
+| `TEAMS_TENANT_ID`    | **Required** — Constrains activity tenant identity.   |
+| `TEAMS_APP_PASSWORD` | **Required** — Authenticates outbound OAuth requests. |
 
 It installs `@flue/teams` for authenticated Bot Connector ingress and creates a
 project-owned Fetch client for outbound messages.
@@ -24,10 +35,6 @@ Set the Azure Bot messaging endpoint to:
 ```txt
 https://example.com/channels/teams/activities
 ```
-
-`TEAMS_APP_ID` constrains the inbound JWT audience.
-`TEAMS_TENANT_ID` constrains activity tenant identity.
-`TEAMS_APP_PASSWORD` authenticates outbound OAuth requests.
 
 Teams bots receive channel messages when mentioned by default. Configure the
 appropriate Teams resource-specific consent permissions when the application

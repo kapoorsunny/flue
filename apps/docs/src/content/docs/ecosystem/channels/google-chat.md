@@ -1,39 +1,37 @@
 ---
 title: Google Chat
 description: Receive authenticated Google Chat interactions and Workspace Events with a project-owned REST client.
-subtitle: Receive messages, commands, and space activity over authenticated HTTP, then reply to the trusted Google Chat conversation from application code.
 package:
   name: '@flue/google-chat'
   href: https://www.npmjs.com/package/@flue/google-chat
 lastReviewedAt: 2026-06-14
 ---
 
-## Add Google Chat
+## Quickstart
 
-Add Google Chat as an inbound channel to any existing Flue project by running the
-following command in your terminal, or your coding agent of choice.
+Add Google Chat as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add channel google-chat
 ```
+
+## Configure
+
+| Variable                             | Purpose                                                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GOOGLE_CHAT_APP_URL`                | **Required for interaction endpoint-URL authentication** — Exact public interaction endpoint used as the Google OIDC token audience. |
+| `GOOGLE_CHAT_PUBSUB_SUBSCRIPTION`    | **Required for Workspace Events** — Exact `projects/<project>/subscriptions/<subscription>` resource required in the push body.      |
+| `GOOGLE_CHAT_PUBSUB_AUDIENCE`        | **Required for Workspace Events** — Exact audience configured on the authenticated Pub/Sub push subscription.                        |
+| `GOOGLE_CHAT_PUBSUB_SERVICE_ACCOUNT` | **Required for Workspace Events** — Verifies the service-account identity in the Pub/Sub push OIDC token.                            |
+| `GOOGLE_CHAT_CLIENT_EMAIL`           | **Required for outbound API calls** — Identifies the service account used to request a `chat.bot` access token.                      |
+| `GOOGLE_CHAT_PRIVATE_KEY`            | **Required for outbound API calls** — Signs the service-account JWT assertion used for the OAuth token exchange.                     |
 
 The blueprint installs and configures `@flue/google-chat` for authenticated inbound
 requests and `jose` for a project-owned outbound Fetch client. After running the
 command, you will have a new `src/channels/google-chat.ts` module exporting
 `channel`, `client`, and an application-owned message tool.
 
-## Configure Google Chat
-
-Configure only the credentials for the surfaces your application uses:
-
-| Surface                  | Variable                             | Purpose                                                                                     |
-| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Direct ingress           | `GOOGLE_CHAT_APP_URL`                | Exact public interaction endpoint used as the Google OIDC token audience.                   |
-| Pub/Sub ingress          | `GOOGLE_CHAT_PUBSUB_SUBSCRIPTION`    | Exact `projects/<project>/subscriptions/<subscription>` resource required in the push body. |
-| Pub/Sub ingress          | `GOOGLE_CHAT_PUBSUB_AUDIENCE`        | Exact audience configured on the authenticated Pub/Sub push subscription.                   |
-| Pub/Sub ingress          | `GOOGLE_CHAT_PUBSUB_SERVICE_ACCOUNT` | Verifies the service-account identity in the Pub/Sub push OIDC token.                       |
-| Outbound service account | `GOOGLE_CHAT_CLIENT_EMAIL`           | Identifies the service account used to request a `chat.bot` access token.                   |
-| Outbound service account | `GOOGLE_CHAT_PRIVATE_KEY`            | Signs the service-account JWT assertion used for the OAuth token exchange.                  |
+Configure only the credentials for the surfaces your application uses.
 
 Set the Google Chat app connection to **HTTP endpoint URL** and use the full
 public interaction route:

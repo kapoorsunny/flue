@@ -1,15 +1,27 @@
 ---
 title: Shopify
 description: Receive verified Shopify webhooks and use a shop-bound Admin GraphQL client from application-owned tools.
+package:
+  name: '@flue/shopify'
+  href: https://www.npmjs.com/package/@flue/shopify
 ---
 
-## Add Shopify
+## Quickstart
 
-Run the Shopify blueprint through your coding agent:
+Add Shopify as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel shopify --print | codex
+flue add channel shopify
 ```
+
+## Configure
+
+| Variable                         | Purpose                                                                |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `SHOPIFY_CLIENT_SECRET`          | **Required** — Verifies inbound request bodies.                        |
+| `SHOPIFY_PREVIOUS_CLIENT_SECRET` | **Optional** — Verifies deliveries during a secret-rotation overlap.   |
+| `SHOPIFY_ADMIN_ACCESS_TOKEN`     | **Required** — Authenticates outbound Admin GraphQL requests.          |
+| `SHOPIFY_SHOP_DOMAIN`            | **Required** — Binds the client and inbound tenancy check to one shop. |
 
 It installs `@flue/shopify` and the official lightweight
 `@shopify/admin-api-client@1.1.2`. The blueprint creates a channel module with
@@ -21,9 +33,8 @@ Configure a JSON webhook subscription with this URL:
 https://example.com/channels/shopify/webhook
 ```
 
-`SHOPIFY_CLIENT_SECRET` verifies inbound request bodies.
-`SHOPIFY_ADMIN_ACCESS_TOKEN` authenticates outbound Admin GraphQL requests.
-They are separate credentials.
+The inbound client secret and outbound Admin access token are separate
+credentials.
 
 The Admin client's public declarations include a `Buffer` reference through
 `@shopify/graphql-client`. Add a compatible `@types/node` development

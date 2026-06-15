@@ -1,19 +1,24 @@
 ---
 title: Supabase
 description: Give Flue agents and workflow runs durable, shared state with Supabase Postgres.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history in Supabase using the existing Postgres adapter.
 package:
   name: '@flue/postgres'
   href: https://www.npmjs.com/package/@flue/postgres
 ---
 
-## Add Supabase
+## Quickstart
 
-Add Supabase-backed persistence to an existing Flue project with:
+Add Supabase as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database supabase
 ```
+
+## Configure
+
+| Variable                | Purpose                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `SUPABASE_DATABASE_URL` | **Required** — Connection string from **Supabase Dashboard > Connect**. |
 
 The blueprint installs the existing `@flue/postgres` adapter with `pg` and
 writes a source-root `db.ts`. There is no Supabase-specific Flue package. Flue
@@ -22,8 +27,6 @@ discovers the file at build time and wires it into the generated Node server.
 This integration is **Node.js only**. The Cloudflare target uses Durable Object
 SQLite automatically and rejects `db.ts` at build time. See
 [Database](/docs/guide/database/) for persistence by target.
-
-## Configure the connection
 
 Copy a connection string from **Supabase Dashboard > Connect** and provide it at
 runtime as `SUPABASE_DATABASE_URL`:

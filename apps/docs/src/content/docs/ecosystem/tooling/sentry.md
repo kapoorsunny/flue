@@ -1,38 +1,35 @@
 ---
 title: Sentry
 description: Report Flue workflow failures and explicit error logs to Sentry on Node.js and Cloudflare.
-subtitle: Capture actionable failures with Flue correlation tags while keeping model content out of telemetry by default.
 ---
 
-## Add Sentry
+## Quickstart
 
-Add target-aware Sentry error reporting to an existing Flue project with:
+Add Sentry as an observability integration to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add tooling sentry
 ```
 
+## Configure
+
+| Variable             | Purpose                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------- |
+| `SENTRY_DSN`         | **Required for event delivery** — Identifies the Sentry project and permits event submission. |
+| `SENTRY_ENVIRONMENT` | **Optional** — Identifies the deployment environment in Sentry.                               |
+| `SENTRY_RELEASE`     | **Optional** — Associates events with a deployed release.                                     |
+
+Only `SENTRY_DSN` is needed to deliver events. A Sentry DSN permits event submission but does not grant read access to project data. Keeping it in deployment configuration rather than application source makes rotation and abuse mitigation easier; use a secret or environment binding according to your project's policy.
+
 The blueprint installs `@sentry/node` or `@sentry/cloudflare`, initializes the SDK at the appropriate runtime boundary, and adds an `observe(...)` bridge for workflow failures and explicit `ctx.log.error(...)` calls. It does not enable traces, AI metrics, or model-content export by default.
 
 See [Observability](/docs/guide/observability/#choose-an-observability-provider) to compare Sentry with OpenTelemetry and Braintrust.
 
-## Configure the project
-
-Configure the Sentry project DSN through your deployment environment:
-
-```sh
-SENTRY_DSN=https://<key>@<org>.ingest.sentry.io/<project>
-SENTRY_ENVIRONMENT=production
-SENTRY_RELEASE=<commit-sha>
-```
-
-Only `SENTRY_DSN` is needed to deliver events. A Sentry DSN permits event submission but does not grant read access to project data. Keeping it in deployment configuration rather than application source makes rotation and abuse mitigation easier; use a secret or environment binding according to your project's policy.
-
 The integration uses different SDKs by target:
 
-| Target | Package | Initialization |
-| --- | --- | --- |
-| Node.js | `@sentry/node` | Module-scoped `Sentry.init(...)` in application source |
+| Target     | Package              | Initialization                                                                                   |
+| ---------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| Node.js    | `@sentry/node`       | Module-scoped `Sentry.init(...)` in application source                                           |
 | Cloudflare | `@sentry/cloudflare` | `instrumentDurableObjectWithSentry(...)` around each generated agent and workflow Durable Object |
 
 Do not use `@sentry/node` on Cloudflare through `nodejs_compat`.

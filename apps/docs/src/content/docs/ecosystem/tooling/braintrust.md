@@ -1,19 +1,27 @@
 ---
 title: Braintrust
 description: Trace Flue workflows, model turns, tools, tasks, and compactions in Braintrust.
-subtitle: Debug agent behavior with structured traces, token usage, costs, and Flue correlation across Node.js and Cloudflare.
 package:
   name: braintrust
   href: https://www.npmjs.com/package/braintrust
 ---
 
-## Add Braintrust
+## Quickstart
 
-Add Braintrust tracing to an existing Flue project with:
+Add Braintrust as an observability integration to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add tooling braintrust
 ```
+
+## Configure
+
+| Variable                  | Purpose                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| `BRAINTRUST_API_KEY`      | **Required for trace export** — Authenticates trace export to Braintrust.               |
+| `BRAINTRUST_PROJECT_NAME` | **Optional** — Chooses the Braintrust project that receives traces. Defaults to `Flue`. |
+
+Never commit the API key; on Cloudflare, store it as a Worker secret rather than a Wrangler `vars` value. When the key is absent, the integration does not initialize or subscribe and the application continues without trace export.
 
 The blueprint installs Braintrust 3.17 and registers its public Flue observer through `observe(...)`. The same source builds on Node.js and Cloudflare through Braintrust's `workerd` export; no separate Cloudflare package or Durable Object wrapper is needed.
 
@@ -21,27 +29,16 @@ Braintrust also provides a Node import hook for Node-only auto-instrumentation. 
 
 See [Observability](/docs/guide/observability/#choose-an-observability-provider) to compare Braintrust with OpenTelemetry and Sentry.
 
-## Configure the project
-
-Provide the API key through your deployment platform's secret store and choose the Braintrust project that receives traces:
-
-```sh
-BRAINTRUST_API_KEY=<braintrust-api-key>
-BRAINTRUST_PROJECT_NAME=Flue
-```
-
-The project name defaults to `Flue`. Never commit the API key; on Cloudflare, store it as a Worker secret rather than a Wrangler `vars` value. When the key is absent, the integration does not initialize or subscribe and the application continues without trace export.
-
 ## What Braintrust traces
 
-| Flue activity | Braintrust trace |
-| --- | --- |
-| Workflow invocation | Root `workflow:<name>` task span |
-| Prompt, skill, or compaction operation | Nested `flue.<kind>` task span |
-| Model turn | `llm:<model>` span with input, output, errors, and usage metrics |
-| Tool call | Nested `tool:<name>` span |
-| Delegated task | Nested task span |
-| Context compaction | Nested compaction span |
+| Flue activity                          | Braintrust trace                                                 |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| Workflow invocation                    | Root `workflow:<name>` task span                                 |
+| Prompt, skill, or compaction operation | Nested `flue.<kind>` task span                                   |
+| Model turn                             | `llm:<model>` span with input, output, errors, and usage metrics |
+| Tool call                              | Nested `tool:<name>` span                                        |
+| Delegated task                         | Nested task span                                                 |
+| Context compaction                     | Nested compaction span                                           |
 
 Model spans include token usage and estimated cost where available. Workflow traces carry `runId`; persistent-agent traces retain agent instance, session, operation, and optional `dispatchId` correlation. See [Observability](/docs/guide/observability/) for Flue's identity and observer model.
 

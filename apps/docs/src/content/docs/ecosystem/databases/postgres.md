@@ -1,20 +1,29 @@
 ---
 title: Postgres
 description: Give Flue agents and workflow runs durable, shared state with a Postgres database.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history in Postgres so state survives restarts and is shared across replicas.
 package:
   name: '@flue/postgres'
   href: https://www.npmjs.com/package/@flue/postgres
 ---
 
-## Add Postgres
+## Quickstart
 
-Add Postgres-backed persistence to any existing Flue project by running the
-following command in your terminal, or your coding agent of choice.
+Add Postgres as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database postgres
 ```
+
+## Configure
+
+| Variable       | Purpose                                                                                |
+| -------------- | -------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | **Required** — Postgres connection string, e.g. `postgresql://user:pass@host:5432/db`. |
+
+Your driver reads `DATABASE_URL` at runtime — it is not baked into the build.
+For local development, `flue dev --env <file>` and `flue run --env <file>` load
+any `.env`-format file. In production, supply it from your platform's secret
+store.
 
 The blueprint installs `@flue/postgres`, helps you choose a Postgres driver,
 and writes a source-root `db.ts` that wraps it. Flue discovers `db.ts` at build
@@ -26,19 +35,6 @@ Postgres instead of in-memory state.
 Object SQLite automatically and rejects a `db.ts` file at build time, so this
 guide applies to Node deployments. See [Database](/docs/guide/database/) for the
 full picture of how state is stored on each target.
-
-## Configure
-
-Set one application secret:
-
-| Variable       | Purpose                                                       |
-| -------------- | ------------------------------------------------------------- |
-| `DATABASE_URL` | Postgres connection string, e.g. `postgresql://user:pass@host:5432/db`. |
-
-Your driver reads `DATABASE_URL` at runtime — it is not baked into the build.
-For local development, `flue dev --env <file>` and `flue run --env <file>` load
-any `.env`-format file. In production, supply it from your platform's secret
-store.
 
 ## Bring your own driver
 
@@ -111,12 +107,12 @@ database written by a newer Flue refuses to start rather than corrupting state.
 
 A Flue database stores runtime state, not your whole application.
 
-| Stored by Flue | Not stored by Flue |
-| --- | --- |
-| Agent session messages and compaction state | Sandbox files and installed dependencies |
-| Accepted direct prompts and `dispatch(...)` submissions | External API side effects |
-| Workflow-run records and persisted events | Application-owned business data unless your own tools store it |
-| Run indexing for `/runs` lookups and `listRuns()` | Provider credentials or secrets |
+| Stored by Flue                                          | Not stored by Flue                                             |
+| ------------------------------------------------------- | -------------------------------------------------------------- |
+| Agent session messages and compaction state             | Sandbox files and installed dependencies                       |
+| Accepted direct prompts and `dispatch(...)` submissions | External API side effects                                      |
+| Workflow-run records and persisted events               | Application-owned business data unless your own tools store it |
+| Run indexing for `/runs` lookups and `listRuns()`       | Provider credentials or secrets                                |
 
 The submission rows and their turn journals are what make accepted work
 recoverable after an interruption. See [Durable Agents](/docs/concepts/durable-execution/)
@@ -125,12 +121,12 @@ for the exact adapter contract.
 
 ## When to choose Postgres
 
-| Use case | Adapter |
-| --- | --- |
-| Local development, or restart persistence is unnecessary | `sqlite()` from `@flue/runtime/node` (file path or in-memory) |
-| Single-host Node deployment | File-backed `sqlite()` |
-| Multi-replica Node deployment, or state must survive host loss | `@flue/postgres` |
-| Cloudflare deployment | Built-in Durable Object SQLite (no `db.ts`) |
+| Use case                                                       | Adapter                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------- |
+| Local development, or restart persistence is unnecessary       | `sqlite()` from `@flue/runtime/node` (file path or in-memory) |
+| Single-host Node deployment                                    | File-backed `sqlite()`                                        |
+| Multi-replica Node deployment, or state must survive host loss | `@flue/postgres`                                              |
+| Cloudflare deployment                                          | Built-in Durable Object SQLite (no `db.ts`)                   |
 
 Choose Postgres when more than one process needs the same accepted work and
 run history, or when a single host's disk is not a durable enough home for

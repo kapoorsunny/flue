@@ -1,15 +1,29 @@
 ---
 title: Twilio
 description: Receive verified Twilio SMS and MMS webhooks with a project-owned Fetch client.
+package:
+  name: '@flue/twilio'
+  href: https://www.npmjs.com/package/@flue/twilio
 ---
 
-## Add Twilio
+## Quickstart
 
-Run the Twilio blueprint through your coding agent:
+Add Twilio as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel twilio --print | codex
+flue add channel twilio
 ```
+
+## Configure
+
+| Variable                       | Purpose                                                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `TWILIO_ACCOUNT_SID`           | **Required** — Restricts inbound requests and identifies outbound API calls.                    |
+| `TWILIO_AUTH_TOKEN`            | **Required** — Verifies inbound signatures and authenticates API calls.                         |
+| `TWILIO_WEBHOOK_URL`           | **Required** — Supplies the exact public URL used for signature checks.                         |
+| `TWILIO_PHONE_NUMBER`          | **Required for an address-based destination** — Binds an address-based destination.             |
+| `TWILIO_MESSAGING_SERVICE_SID` | **Required for a Messaging Service destination** — Binds a Messaging Service destination.       |
+| `TWILIO_STATUS_CALLBACK_URL`   | **Required when status callbacks are enabled** — Supplies the exact public status callback URL. |
 
 It installs `@flue/twilio` for verified ingress and creates an editable Fetch
 client for outbound Programmable Messaging. The official Twilio Node helper is
@@ -21,6 +35,33 @@ Set the inbound webhook URL to:
 ```txt
 https://example.com/channels/twilio/webhook
 ```
+
+Set the account SID, auth token, destination, and exact public webhook URL.
+Twilio signs the external configured URL plus every form parameter. An
+application behind a proxy cannot reliably reconstruct that URL from the
+request, so `webhookUrl` is required and must include any outer mount prefix or
+query string.
+
+A trusted proxy may strip an external path prefix before the request reaches
+Flue. Signature validation still uses `webhookUrl`; the fixed channel route owns
+the internal path. The incoming request's own query string is not re-checked —
+it is already part of the signed bytes, so any tampering fails signature
+(`401`).
+
+Connection-override fragments may remain in the configured URL. They are
+excluded from signature validation because Twilio does not send or sign URL
+fragments.
+
+For a Messaging Service, configure:
+
+```ts
+destination: {
+  type: 'messaging-service',
+  messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID!,
+},
+```
+
+The package rejects signed requests for another account or destination.
 
 ## Channel module
 
@@ -93,35 +134,6 @@ export function postMessage(ref: TwilioConversationRef) {
 The blueprint creates `src/twilio-client.ts` with the Fetch client used above.
 Bind the tool from the agent with
 `postMessage(channel.parseConversationKey(id))`.
-
-## Configure signatures
-
-Set the account SID, auth token, destination, and exact public webhook URL.
-Twilio signs the external configured URL plus every form parameter. An
-application behind a proxy cannot reliably reconstruct that URL from the
-request, so `webhookUrl` is required and must include any outer mount prefix or
-query string.
-
-A trusted proxy may strip an external path prefix before the request reaches
-Flue. Signature validation still uses `webhookUrl`; the fixed channel route owns
-the internal path. The incoming request's own query string is not re-checked —
-it is already part of the signed bytes, so any tampering fails signature
-(`401`).
-
-Connection-override fragments may remain in the configured URL. They are
-excluded from signature validation because Twilio does not send or sign URL
-fragments.
-
-For a Messaging Service, configure:
-
-```ts
-destination: {
-  type: 'messaging-service',
-  messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID!,
-},
-```
-
-The package rejects signed requests for another account or destination.
 
 ## Message behavior
 

@@ -1,15 +1,25 @@
 ---
 title: Notion
 description: Receive signed Notion webhook events and use the official client from application-owned tools.
+package:
+  name: '@flue/notion'
+  href: https://www.npmjs.com/package/@flue/notion
 ---
 
-## Add Notion
+## Quickstart
 
-Run the Notion blueprint through your coding agent:
+Add Notion as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel notion --print | codex
+flue add channel notion
 ```
+
+## Configure
+
+| Variable                            | Purpose                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `NOTION_WEBHOOK_VERIFICATION_TOKEN` | **Required after initial verification** — Verifies recurring webhook events after setup. |
+| `NOTION_TOKEN`                      | **Required** — Authenticates outbound API calls.                                         |
 
 It installs `@flue/notion` and the official
 `@notionhq/client@5.22.0`. The blueprint creates a channel module with named
@@ -21,8 +31,9 @@ Configure the webhook URL as:
 https://example.com/channels/notion/webhook
 ```
 
-`NOTION_WEBHOOK_VERIFICATION_TOKEN` verifies recurring webhook events.
-`NOTION_TOKEN` authenticates outbound API calls. They are separate credentials.
+The webhook verification token and outbound API token are separate credentials.
+During initial setup, use the `verification` callback described below to receive
+and securely persist the webhook verification token.
 
 The package declares `@types/node` as a required peer because the official
 client's declarations import `node:http`. Add it as a development dependency

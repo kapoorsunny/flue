@@ -1,21 +1,26 @@
 ---
 title: Discord
 description: Receive verified Discord interactions and use a project-owned REST client.
-subtitle: Receive commands, components, autocomplete requests, and modal submissions over verified HTTP, then respond or call Discord's REST API from application code.
 package:
   name: '@flue/discord'
   href: https://www.npmjs.com/package/@flue/discord
 lastReviewedAt: 2026-06-13
 ---
 
-## Add Discord
+## Quickstart
 
-Add Discord as an inbound channel to any existing Flue project by running the
-following command in your terminal, or your coding agent of choice.
+Add Discord as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add channel discord
 ```
+
+## Configure
+
+| Variable             | Purpose                                                    |
+| -------------------- | ---------------------------------------------------------- |
+| `DISCORD_PUBLIC_KEY` | **Required** — Verifies inbound interaction request bytes. |
+| `DISCORD_BOT_TOKEN`  | **Required** — Authenticates outbound Discord REST calls.  |
 
 The blueprint installs and configures `@flue/discord` for inbound HTTP
 interactions, along with a project-owned `@discordjs/rest` client for outbound
@@ -26,15 +31,6 @@ Discord does not publish an official JavaScript REST SDK. The blueprint uses the
 community-maintained `@discordjs/rest` client. Your application owns that client
 and its outbound API calls; `@flue/discord` handles only verified inbound HTTP
 interactions.
-
-## Configure Discord
-
-Set these application secrets:
-
-| Variable             | Purpose                                     |
-| -------------------- | ------------------------------------------- |
-| `DISCORD_PUBLIC_KEY` | Verifies inbound interaction request bytes. |
-| `DISCORD_BOT_TOKEN`  | Authenticates outbound Discord REST calls.  |
 
 In the Discord Developer Portal, set the application's Interactions Endpoint
 URL to the full public HTTPS route:

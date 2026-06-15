@@ -1,15 +1,25 @@
 ---
 title: Resend
 description: Receive verified Resend webhooks and retrieve inbound email through the official client.
+package:
+  name: '@flue/resend'
+  href: https://www.npmjs.com/package/@flue/resend
 ---
 
-## Add Resend
+## Quickstart
 
-Run the Resend blueprint through your coding agent:
+Add Resend as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel resend --print | codex
+flue add channel resend
 ```
+
+## Configure
+
+| Variable                | Purpose                                          |
+| ----------------------- | ------------------------------------------------ |
+| `RESEND_WEBHOOK_SECRET` | **Required** — Verifies inbound deliveries.      |
+| `RESEND_API_KEY`        | **Required** — Authenticates outbound SDK calls. |
 
 It installs `@flue/resend` and the official `resend@6.12.4` SDK. The blueprint
 creates a channel module with named `channel` and project-owned `client`
@@ -21,8 +31,7 @@ Configure the webhook URL as:
 https://example.com/channels/resend/webhook
 ```
 
-`RESEND_WEBHOOK_SECRET` verifies inbound deliveries. `RESEND_API_KEY`
-authenticates outbound SDK calls. They are separate credentials.
+The webhook secret and outbound API key are separate credentials.
 
 The SDK's public declarations reference `Buffer` and React email types. Add
 `@types/node` and `@types/react` as development dependencies. Both are

@@ -1,16 +1,27 @@
 ---
 title: Salesforce Marketing Cloud
 description: Receive verified Marketing Cloud Engagement ENS batches and compose a tenant-bound Fetch client.
+package:
+  name: '@flue/salesforce-marketing-cloud'
+  href: https://www.npmjs.com/package/@flue/salesforce-marketing-cloud
 ---
 
-## Add Salesforce Marketing Cloud
+## Quickstart
 
-Run the Salesforce Marketing Cloud Engagement blueprint through your coding
-agent:
+Add Salesforce Marketing Cloud Engagement as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
-flue add channel salesforce-marketing-cloud --print | codex
+flue add channel salesforce-marketing-cloud
 ```
+
+## Configure
+
+| Variable                                   | Purpose                                                                 |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| `SALESFORCE_MARKETING_CLOUD_SIGNATURE_KEY` | **Required** — Verifies inbound ENS batches.                            |
+| `SALESFORCE_MARKETING_CLOUD_CALLBACK_ID`   | **Required** — Restricts and identifies the configured ENS callback.    |
+| `SALESFORCE_MARKETING_CLOUD_REST_BASE_URL` | **Required** — Selects the tenant-specific Marketing Cloud REST origin. |
+| `SALESFORCE_MARKETING_CLOUD_ACCESS_TOKEN`  | **Required** — Authenticates application-owned REST requests.           |
 
 It installs `@flue/salesforce-marketing-cloud` and creates named `channel` and
 project-owned `client` exports. The integration targets Marketing Cloud
@@ -22,9 +33,9 @@ Register the complete callback URL:
 https://example.com/channels/salesforce-marketing-cloud/events
 ```
 
-`SALESFORCE_MARKETING_CLOUD_SIGNATURE_KEY` verifies inbound ENS batches.
-`SALESFORCE_MARKETING_CLOUD_ACCESS_TOKEN` authenticates application-owned REST
-requests. They are separate credentials.
+The signature key and outbound access token are separate credentials. Callback
+registration, OAuth, token refresh, and token storage remain
+application-owned.
 
 ## Channel module
 

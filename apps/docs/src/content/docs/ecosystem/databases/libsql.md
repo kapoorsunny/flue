@@ -1,20 +1,28 @@
 ---
 title: libSQL
 description: Give Flue agents and workflow runs durable state with libSQL — a local SQLite file, a self-hosted libSQL server, or an embedded replica.
-subtitle: Persist agent sessions, accepted submissions, and workflow-run history with libSQL, from a local SQLite file to a self-hosted libSQL server.
 package:
   name: '@flue/libsql'
   href: https://www.npmjs.com/package/@flue/libsql
 ---
 
-## Add libSQL
+## Quickstart
 
-Add libSQL-backed persistence to any existing Flue project by running the
-following command in your terminal, or your coding agent of choice.
+Add libSQL as a persistence backend to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add database libsql
 ```
+
+## Configure
+
+| Variable     | Purpose                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `LIBSQL_URL` | **Required** — A local file (`file:./data/flue.db`) or a libSQL server (`http://host:8080`). |
+
+`createClient` reads this at runtime — it is not baked into the build. For local
+development, `flue dev --env <file>` and `flue run --env <file>` load any
+`.env`-format file. In production, supply it from your platform's secret store.
 
 The blueprint installs `@flue/libsql` and the official `@libsql/client`, and
 writes a source-root `db.ts` that wraps the client. Flue discovers `db.ts` at
@@ -26,18 +34,6 @@ adapter with a Turso client configuration.
 Object SQLite automatically and rejects a `db.ts` file at build time, so this
 guide applies to Node deployments. See [Database](/docs/guide/database/) for the
 full picture of how state is stored on each target.
-
-## Configure
-
-Set the connection target your deployment uses:
-
-| Variable      | Purpose                                                                 |
-| ------------- | ----------------------------------------------------------------------- |
-| `LIBSQL_URL`  | A local file (`file:./data/flue.db`) or a libSQL server (`http://host:8080`). |
-
-`createClient` reads this at runtime — it is not baked into the build. For local
-development, `flue dev --env <file>` and `flue run --env <file>` load any
-`.env`-format file. In production, supply it from your platform's secret store.
 
 ## Bring your own driver
 
@@ -62,7 +58,10 @@ const toRows = (rs: ResultSet) =>
 let tail: Promise<unknown> = Promise.resolve();
 const serialize = <T>(operation: () => Promise<T>): Promise<T> => {
   const result = tail.then(operation, operation);
-  tail = result.then(() => undefined, () => undefined);
+  tail = result.then(
+    () => undefined,
+    () => undefined,
+  );
   return result;
 };
 
@@ -74,8 +73,7 @@ export default libsql({
       const tx = await client.transaction('write');
       try {
         const result = await fn({
-          query: async (text, params = []) =>
-            toRows(await tx.execute({ sql: text, args: params })),
+          query: async (text, params = []) => toRows(await tx.execute({ sql: text, args: params })),
         });
         await tx.commit();
         return result;
@@ -95,12 +93,12 @@ export default libsql({
 `createClient` decides where state lives — the adapter is identical across all
 of them:
 
-| Target | `createClient(...)` |
-| --- | --- |
-| Local SQLite file | `{ url: 'file:./data/flue.db' }` |
-| Self-hosted libSQL server (`sqld`) | `{ url: 'http://127.0.0.1:8080' }` |
-| Embedded replica (local file synced to a remote) | `{ url: 'file:local.db', syncUrl, authToken }` |
-| Hosted Turso | see the [Turso guide](/docs/ecosystem/databases/turso/) |
+| Target                                           | `createClient(...)`                                     |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| Local SQLite file                                | `{ url: 'file:./data/flue.db' }`                        |
+| Self-hosted libSQL server (`sqld`)               | `{ url: 'http://127.0.0.1:8080' }`                      |
+| Embedded replica (local file synced to a remote) | `{ url: 'file:local.db', syncUrl, authToken }`          |
+| Hosted Turso                                     | see the [Turso guide](/docs/ecosystem/databases/turso/) |
 
 ### Embedded-file concurrency
 
@@ -122,12 +120,12 @@ database written by a newer Flue refuses to start rather than corrupting state.
 
 A Flue database stores runtime state, not your whole application.
 
-| Stored by Flue | Not stored by Flue |
-| --- | --- |
-| Agent session messages and compaction state | Sandbox files and installed dependencies |
-| Accepted direct prompts and `dispatch(...)` submissions | External API side effects |
-| Workflow-run records and persisted events | Application-owned business data unless your own tools store it |
-| Run indexing for `/runs` lookups and `listRuns()` | Provider credentials or secrets |
+| Stored by Flue                                          | Not stored by Flue                                             |
+| ------------------------------------------------------- | -------------------------------------------------------------- |
+| Agent session messages and compaction state             | Sandbox files and installed dependencies                       |
+| Accepted direct prompts and `dispatch(...)` submissions | External API side effects                                      |
+| Workflow-run records and persisted events               | Application-owned business data unless your own tools store it |
+| Run indexing for `/runs` lookups and `listRuns()`       | Provider credentials or secrets                                |
 
 See [Durable Agents](/docs/concepts/durable-execution/) for how recovery uses
 submission state, and the [Data Persistence API](/docs/api/data-persistence-api/)
@@ -135,13 +133,13 @@ for the exact adapter contract.
 
 ## When to choose libSQL
 
-| Use case | Adapter |
-| --- | --- |
-| Local development | `sqlite()` from `@flue/runtime/node`, or libSQL against a `file:` database |
-| Single-host Node deployment | File-backed `sqlite()` or libSQL `file:` |
-| Self-hosted SQLite over the network, or an embedded replica | `@flue/libsql` |
-| Hosted, replicated SQLite | `@flue/libsql` against [Turso](/docs/ecosystem/databases/turso/) |
-| Multi-replica Node deployment on Postgres | [`@flue/postgres`](/docs/ecosystem/databases/postgres/) |
+| Use case                                                    | Adapter                                                                    |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Local development                                           | `sqlite()` from `@flue/runtime/node`, or libSQL against a `file:` database |
+| Single-host Node deployment                                 | File-backed `sqlite()` or libSQL `file:`                                   |
+| Self-hosted SQLite over the network, or an embedded replica | `@flue/libsql`                                                             |
+| Hosted, replicated SQLite                                   | `@flue/libsql` against [Turso](/docs/ecosystem/databases/turso/)           |
+| Multi-replica Node deployment on Postgres                   | [`@flue/postgres`](/docs/ecosystem/databases/postgres/)                    |
 
 libSQL is the right choice when you want SQLite's model but reachable over the
 network or kept close to the app as an embedded replica. For a fully managed,

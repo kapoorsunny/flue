@@ -1,35 +1,31 @@
 ---
 title: Slack
 description: Receive verified Slack events and use the Slack Web API from application code.
-subtitle: Receive Slack events, interactions, and commands, then reply, show status, and stream responses with the Slack Web API.
 package:
   name: '@flue/slack'
   href: https://www.npmjs.com/package/@flue/slack
 lastReviewedAt: 2026-06-13
 ---
 
-## Add Slack
+## Quickstart
 
-Add Slack as an inbound channel to any existing Flue project by running the
-following command in your terminal, or your coding agent of choice.
+Add Slack as an inbound channel to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```sh
 flue add channel slack
 ```
 
+## Configure
+
+| Variable               | Purpose                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| `SLACK_SIGNING_SECRET` | **Required** — Verifies inbound request bytes.             |
+| `SLACK_BOT_TOKEN`      | **Required** — Authenticates outbound Slack Web API calls. |
+
 The blueprint installs and configures `@flue/slack` for inbound requests, along
 with Slack's official `@slack/web-api` SDK for making outbound API calls. After
 running the command, you will have a new `src/channels/slack.ts` channel with
 new `/channels/slack/*` webhook routes set up and ready to receive events.
-
-## Configure Slack
-
-Set these application secrets:
-
-| Variable               | Purpose                                     |
-| ---------------------- | ------------------------------------------- |
-| `SLACK_SIGNING_SECRET` | Verifies inbound request bytes.             |
-| `SLACK_BOT_TOKEN`      | Authenticates outbound Slack Web API calls. |
 
 ## Supported Webhooks
 

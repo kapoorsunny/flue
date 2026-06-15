@@ -5,27 +5,30 @@ description: Use a durable Cloudflare Workspace with code-oriented agent operati
 
 The Cloudflare Shell adapter adapts an application-owned `@cloudflare/shell` `Workspace` into a Flue sandbox on the Cloudflare target. Unlike a Linux shell sandbox, it provides a durable workspace and a model-facing `code` tool that executes JavaScript against workspace state through a Worker Loader binding.
 
-## Add the adapter
+## Quickstart
+
+Add Cloudflare Shell as a sandbox to any existing Flue project by running the following command in your terminal or coding agent of choice.
 
 ```bash
-pnpm exec flue add sandbox cloudflare-shell
+flue add sandbox cloudflare-shell
 ```
+
+## Configure
+
+| Requirement                               | Purpose                                                                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Cloudflare target                         | **Required** — Runs the Workspace and Worker Loader integration.                                                                     |
+| `@cloudflare/shell` package               | **Required** — Provides the durable Workspace.                                                                                       |
+| `@cloudflare/codemode` package            | **Required** — Provides code-oriented model operations.                                                                              |
+| `worker_loaders` binding such as `LOADER` | **Required on Cloudflare** — Executes JavaScript against Workspace state; this is a Cloudflare binding, not an environment variable. |
+| Environment-variable credentials          | **Not required** — The integration uses the `worker_loaders` binding instead.                                                        |
+| Ordinary Linux shell                      | **Not provided** — This adapter provides a model-facing `code` tool, not shell command execution.                                    |
 
 Import the generated helpers from your project adapter file, not from `@flue/runtime/cloudflare`:
 
 ```ts
 import { getDefaultWorkspace, getShellSandbox } from '../sandboxes/cloudflare-shell';
 ```
-
-## Requirements
-
-| Requirement             | Value                                          |
-| ----------------------- | ---------------------------------------------- |
-| Target                  | Cloudflare                                     |
-| Provider packages       | `@cloudflare/shell` and `@cloudflare/codemode` |
-| Platform configuration  | A `worker_loaders` binding such as `LOADER`    |
-| Model-facing capability | `code` tool operating on Workspace state       |
-| Ordinary shell          | Not provided by this adapter                   |
 
 ## Choose this adapter when
 
