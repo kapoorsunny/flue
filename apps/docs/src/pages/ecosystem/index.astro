@@ -228,8 +228,13 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 	.ecosystem-grid {
 		--ecosystem-tile-size: clamp(5.25rem, 6.4vw, 5.875rem);
 		display: grid;
-		grid-template-columns: repeat(auto-fit, var(--ecosystem-tile-size));
-		justify-content: start;
+		/* auto-fill (not auto-fit) keeps a fixed column count based on the
+		   container width, so a 3-item section lines up on the exact same
+		   columns as a 20-item section. minmax(tile, 1fr) grows the columns to
+		   fill leftover space on a full row, and justify-items: center keeps the
+		   fixed-size tiles centered in their tracks for even spacing. */
+		grid-template-columns: repeat(auto-fill, minmax(var(--ecosystem-tile-size), 1fr));
+		justify-items: center;
 		gap: clamp(1rem, 1.6vw, 1.35rem) clamp(0.75rem, 1.2vw, 1rem);
 		margin: 0;
 		padding: 0;
